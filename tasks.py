@@ -4,38 +4,35 @@ from textwrap import dedent
 class NovaTasks:
     def parse_task(self, agent, log_input):
         return Task(
-            description=dedent(f"""
-                Parse the following raw security log and extract all relevant entities (IPs, users, actions).
-                Log: {log_input}
-                Normalize the data for the Threat Analyzer.
-            """),
-            expected_output="A structured JSON-like normalization of the log containing entities and metadata.",
+            description=f"Parse this log into clean JSON structure, extracting IP, User, and Action: {log_input}",
+            expected_output="Structured JSON data containing extracted security metadata.",
             agent=agent
         )
 
     def analyze_task(self, agent):
         return Task(
             description=dedent("""
-                Using the parsed log data, identify common malicious patterns.
-                1. Map findings to MITRE ATT&CK techniques (e.g., T1071.001 - Web Protocols).
-                2. Calculate a risk score using your tool (Severity, Confidence, Impact).
-                3. Explain your reasoning in detail (Chain of Thought).
+                Analyze the provided log JSON data for security threats.
+                1. Identify potential malicious patterns.
+                2. Map the behavior to MITRE ATT&CK techniques.
+                3. Calculate a risk score (0-100) using your tool (Severity and Confidence).
+                4. Explain your expert reasoning (Chain of Thought).
             """),
-            expected_output="An in-depth analysis report including MITRE tags, risk score, and detailed reasoning.",
+            expected_output="Detailed threat analysis including risk score, MITRE mappings, and reasoning.",
             agent=agent
         )
 
     def report_task(self, agent):
         return Task(
             description=dedent("""
-                Synthesize all prior agent insights into a final NOVA Security Report.
+                Generate a final human-readable Security Triage Report.
                 The report must include:
-                - Executive Summary (High/Medium/Low risk badge)
-                - Technical Breakdown (Entities, Patterns, MITRE mappings)
-                - Risk Score & Explanation
-                - Actionable Recommendations (Remediation steps)
-                Format the final output as clean Markdown.
+                - Executive Summary (Severity Badge)
+                - Technical Breakdown (Entities, Mappings)
+                - Risk Analysis (Score & Reasoning)
+                - Recommendations (Remediation steps)
+                Output final report as professional Markdown.
             """),
-            expected_output="A complete, professional Markdown document for initial cyber threat triage.",
+            expected_output="A polished, executive-level security triage report in Markdown format.",
             agent=agent
         )
