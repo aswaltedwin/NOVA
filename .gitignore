@@ -1,0 +1,18 @@
+# Variables
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+env/
+venv/
+ENV/
+.streamlit/
+*.log
+
+# Project specific
+nova_report.md
+outputs/
+data/*.json
+!nova_phase1/utils.py
