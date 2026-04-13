@@ -1,74 +1,79 @@
-# 🛡️ NOVA: Autonomous Multi-Agent Cyber Triage
+# 🛡️ NOVA: Autonomous Multi-Agent Cyber Defense (Phase 2)
 
-**NOVA** (Network Operations Visual Analyst) is a 100% free, local, and autonomous multi-agent system for cyber threat triage. Built in 2026, it leverages the power of local LLMs and role-based agentic workflows to analyze security logs without sending data to the cloud.
+**NOVA** (Network Operations Visual Analyst) is a 100% free, local, and autonomous multi-agent cybersecurity system. Built in 2026, it leverages **CrewAI**, **Ollama**, and **ChromaDB** to provide agentic triage, deep RAG knowledge, and explainable threat analysis.
 
 ---
 
-## 🌟 Key Features
+## 🌟 Key Features (Sentinel Upgrade)
 
-- **Multi-Agent Collaboration**: A crew of AI specialists working together (Log Architect, Threat Hunter, Incident Coordinator).
-- **Local-First (Privacy)**: Powered by **Ollama**, ensuring your sensitive logs never leave your infrastructure.
-- **Explainable AI (XAI)**: Full chain-of-thought reasoning for every threat detected.
-- **MITRE ATT&CK Mapping**: Automatically maps malicious behaviors to standardized security frameworks.
-- **Interactive Dashboard**: Premium Streamlit UI for real-time triage and report generation.
+### 🏥 Phase 1: Core Triage (Completed)
+- **Hierarchical Multi-Agent Crew**: LogParser, ThreatAnalyzer, ReportGenerator, and NovaManager.
+- **Local-Only LLM**: Powered by **Ollama** (qwen2.5:14b / deepseek-r1).
+- **Explainable AI (XAI)**: Full chain-of-thought tracing for every triage session.
+
+### 🛡️ Phase 2: Sentinel Upgrade (Latest)
+- **Local RAG Integration**: Powered by **ChromaDB** with a built-in knowledge base of 30+ MITRE ATT&CK techniques.
+- **Agentic Memory**: Enabled short-term and long-term context retention across analysis sessions.
+- **Advanced Tooling**:
+    - `RAGSearchTool`: Semantic search over the local MITRE database.
+    - `FileReaderTool`: Ingestion of large local log files (txt, log, json).
+    - `RiskCalculatorTool`: Context-aware security scoring.
+- **Master Datasets**: Includes 1000+ lines of realistic synthetic logs (Auth, Web, EDR, Network) for production-like testing.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Core**: Python 3.12+
-- **Orchestration**: [CrewAI](https://crewai.com) (Latest 2026 Version)
-- **Local LLM**: [Ollama](https://ollama.ai/) (Recommended: `qwen2.5:14b` or `deepseek-r1`)
-- **Frontend**: Streamlit
-- **ML/Parsing**: Pandas, Scikit-learn, Transformers
+- **Orchestration**: [CrewAI](https://crewai.com) (v0.100+)
+- **LLM Engine**: [Ollama](https://ollama.ai/)
+- **Embeddings**: `sentence-transformers` (all-MiniLM-L6-v2) - 100% local
+- **Vector Store**: [ChromaDB](https://www.trychroma.com/)
+- **Frontend**: Streamlit (Premium UI)
 
 ---
 
 ## 🚀 Quick Start
 
 ### 1. Prerequisites
-Install [Ollama](https://ollama.ai/) and pull the required model:
+Install [Ollama](https://ollama.ai/) and pull the local models:
 ```bash
 ollama pull qwen2.5:14b
+ollama pull nomic-embed-text # Optional: Local embedding model
 ```
 
 ### 2. Installation
-Clone the repository and install dependencies:
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/aswaltedwin/NOVA
 cd NOVA
-pip install -r nova_phase1/requirements.txt
+pip install -r requirements.txt
 ```
 
 ### 3. Usage
-Launch the NOVA Dashboard:
+Launch the NOVA Sentinel Command Center:
 ```bash
 streamlit run main.py
 ```
 
----
-
-## 🕵️ Agents in Action
-
-1.  **LogParserAgent**: Normalizes raw logs into structured entities.
-2.  **ThreatAnalyzerAgent**: Detects anomalies and calculates risk scores.
-3.  **ReportGeneratorAgent**: Synthesizes findings into human-readable executive reports.
-4.  **NovaManager**: Orchestrates the workflow and ensures quality control.
+> [!IMPORTANT]
+> **First Run**: Click the **"Initialize/Reset RAG Knowledge Base"** button in the sidebar to populate your local ChromaDB with MITRE ATT&CK intelligence.
 
 ---
 
-## 📊 Sample Datasets
-NOVA comes pre-loaded with 15 realistic security logs covering:
-- Brute Force & Credential Stuffing
-- C2 Beaconing & DNS Tunneling
-- SQL Injection & RCE
-- Insider Threat & Data Exfiltration
+## 🏗️ Architecture
+
+1.  **Ingestion**: `LogParserAgent` structure raw inputs using the `FileReaderTool`.
+2.  **Intelligence**: `ThreatAnalyzerAgent` queries the `RAGSearchTool` to map anomalies to MITRE Tactic IDs.
+3.  **Synthesis**: `ReportGeneratorAgent` produces executive summaries with risk heatmaps.
+4.  **Memory**: The `NovaManager` reviews past interactions to identify persistent threat patterns.
+
+---
+
+## 📊 Phase 3 Preview (Coming Soon)
+- **Computer Vision**: Analyze SOC screenshots with Llama-3.2-Vision.
+- **Active Defense**: Automated firewall/EDR isolation integration.
+- **Sandboxing**: Local container execution for malware analysis.
 
 ---
 
 ## 📝 License
-This project is open-source under the MIT License.
-
----
-
-*NOVA Phase 1 is complete. Ready for Phase 2 integration (Vision & SOC automation).*
+MIT License - Open Source & Community Driven.
