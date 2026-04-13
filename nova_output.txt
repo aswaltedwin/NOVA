@@ -1,0 +1,10 @@
+Based on the evaluation of the current detection response by the blue team, I propose the following scenario for the next round:
+
+1. **Improved Initial Access Detection:**
+   - Develop a new Sigma Rule to detect .xlam files within email attachments that contain known malicious macros.
+2. **Enhanced Credential Dumping Detection:**
+   - Implement enhanced Sigma Rules to monitor PowerShell scripts running with elevated permissions, specifically those containing Mimikatz execution logic or downloading related modules.
+3. **Proactive Lateral Movement Detection:**
+   - Introduce a new SIEM rule to watch for unusual traffic from RDP and SSH connections that exhibit behavior indicative of brute-forcing attempts.
+
+By implementing these measures, we can proactively address the identified gaps in detection and improve overall system resilience against advanced spear-phishing attacks.
