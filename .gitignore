@@ -1,18 +1,69 @@
-# Variables
-.env
+# --- Python & Environment ---
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.venv/
+*.py[cod]
+*$py.class
+*.so
+.Python
 env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.venv
 venv/
 ENV/
-.streamlit/
-*.log
+env.bak/
+venv.bak/
+.env
+.flaskenv
 
-# Project specific
+# --- Local Databases & Knowledge ---
+.nova_knowledge/
+.nova_memory/
+.chroma/
+db.sqlite3
+*.db
+
+# --- Streamlit ---
+.streamlit/config.toml
+.streamlit/secrets.toml
+
+# --- OS Specific ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# --- IDEs ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Project Specific Outputs ---
+*.log
+nova_report.json
 nova_report.md
+nova_sentinel_log.json
 outputs/
-data/*.json
-!nova_phase1/utils.py
+
+# --- Test Data ---
+# Keep the directory structure but ignore specific large generated datasets if preferred
+# test_data/*.json
+# !test_data/sample_logs.json
