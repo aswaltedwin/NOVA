@@ -1,16 +1,15 @@
 import streamlit as st
-import pandas as pd
 from crewai import Crew, Process
 from agents import NovaAgents
 from tasks import NovaTasks
-from utils import load_sample_dataset, save_report
+from utils import load_sample_logs, save_report, initialize_rag
 from config import Config
-import json
+import os
 
-# Page optimization
-st.set_page_config(page_title="NOVA | Agentic Cyber Defense", layout="wide")
+# Page Configuration
+st.set_page_config(page_title="NOVA 🛡️ Sentinel Upgrade Phase 2", layout="wide")
 
-def run_nova_crew(log_input, model_name):
+def run_nova_sentinel(log_input, model_name):
     # Initialize agents and tasks
     agents = NovaAgents(model_name)
     tasks = NovaTasks()
@@ -21,7 +20,7 @@ def run_nova_crew(log_input, model_name):
     reporter_agent = agents.report_generator_agent()
     manager_agent = agents.nova_manager()
 
-    # Define the workflow
+    # Define the workflow (Hierarchical)
     crew = Crew(
         agents=[parser_agent, analyzer_agent, reporter_agent],
         tasks=[
@@ -33,63 +32,80 @@ def run_nova_crew(log_input, model_name):
         manager_agent=manager_agent,
         manager_llm=Config.get_llm(model_name),
         verbose=True,
-        memory=True
+        memory=True, # CrewAI built-in memory
+        embedder=Config.get_embedder() # Use local HuggingFace embedder
     )
 
     return crew.kickoff()
 
 def main():
-    st.markdown("# 🔥 NOVA: Agentic Cyber Defense")
-    st.markdown("### **Phase 1**: Autonomous NLP Threat Triage (100% Local)")
+    st.markdown("# 🛡️ NOVA: Sentinel Upgrade-Phase 2")
+    st.markdown("### **Autonomous Cyber Defense** | RAG Memory & Agentic Collaboration")
 
     # Sidebar for control
-    st.sidebar.header("NOVA Command Center")
-    model_choice = st.sidebar.selectbox("Ollama Model", ["qwen2.5:14b", "deepseek-r1", "llama3.3"], index=0)
-    option = st.sidebar.selectbox("Choose Mode", ["Streamlit Dashboard", "CLI Simulation Mode"])
+    st.sidebar.header("NOVA Command Hub")
+    model_choice = st.sidebar.selectbox("Local Ollama Model", ["qwen2.5:14b", "deepseek-r1", "llama3.3"], index=0)
     
-    # Load samples
-    samples = load_sample_dataset()
+    # RAG Init Status
+    if st.sidebar.button("⚙️ Initialize/Reset RAG Knowledge Base"):
+        with st.status("Initializing MITRE ATT&CK database..."):
+            status_msg = initialize_rag()
+            st.sidebar.success(status_msg)
     
-    if option == "CLI Simulation Mode":
-        st.write("---")
-        st.subheader("Manual Log Input")
-        user_log = st.text_area("Paste Raw Security Log Here:", value=samples[0]["raw"])
+    # Data Mode
+    data_mode = st.sidebar.radio("Input Source", ["Sample Dataset", "Direct Log Entry", "Local File (Phase 2)"])
+    
+    logs = load_sample_logs()
+    
+    if data_mode == "Sample Dataset":
+        selected_sample = st.selectbox("Select a Sample Log:", [f"Log {s['id']}: {s['label'].replace('_', ' ').capitalize()}" for s in logs])
+        log_id = int(selected_sample.split(":")[0].split(" ")[1])
+        user_log = next(s['raw'] for s in logs if s['id'] == log_id)
+        st.code(user_log, language="bash")
         
-        if st.button("🚀 Analyze with NOVA Crew"):
-            with st.status("NOVA Agents collaborating...", expanded=True) as status:
-                result = run_nova_crew(user_log, model_choice)
-                status.update(label="Analysis Complete!", state="complete", expanded=False)
+    elif data_mode == "Local File (Phase 2)":
+        user_log = st.text_input("Enter local file path (Relative or Absolute):", value="sample_intel.txt")
+        if not os.path.exists(user_log):
+            st.warning("File not found! Please ensure it exists.")
+        else:
+            st.info("File detected. NOVA will use the File Reader tool.")
             
-            st.success("Triage Report Generated!")
-            st.markdown(result)
-            
-            if st.button("Save Report"):
-                report_path = save_report(str(result))
-                st.info(f"Report saved locally to {report_path}")
-
     else:
-        st.write("Select a representative sample log for triage:")
-        sample_options = [f"Log {s['id']}: {s['label'].replace('_', ' ').capitalize()}" for s in samples]
-        selected_sample_text = st.selectbox("Sample Database", sample_options)
-        
-        log_id = int(selected_sample_text.split(":")[0].split(" ")[1])
-        selected_log = next(s['raw'] for s in samples if s['id'] == log_id)
-        
-        st.info(f"Loaded {selected_sample_text}")
-        st.code(selected_log, language="bash")
+        user_log = st.text_area("Paste Raw Security Log:", placeholder="2026-04-14 [AUTH] FAILED...")
 
-        if st.button("🛡️ Run NOVA Triage"):
-            with st.spinner("NOVA agents are collaborating..."):
-                result = run_nova_crew(selected_log, model_choice)
-            
-            st.subheader("📊 NOVA Final Security Report")
+    if st.button("🚀 Execute NOVA Sentinel Triage"):
+        if not user_log:
+            st.error("Missing log input!")
+            return
+
+        cols = st.columns(2)
+        with cols[0]:
+            st.subheader("🕵️ Agent Collaboration Trace")
+            with st.status("NOVA Agents collaborating...", expanded=True) as status:
+                st.write("📖 Memory retrieval in progress...")
+                st.write("🔍 RAG Search Tool querying MITRE ATT&CK...")
+                # Result is kickoff
+                result = run_nova_sentinel(user_log, model_choice)
+                status.update(label="Triage Complete!", state="complete", expanded=False)
+
+        with cols[1]:
+            st.subheader("📊 Sentinel Security Report")
             st.markdown(result)
             
-            # Download/Save actions
-            st.download_button("📥 Download Report (MD)", result.raw if hasattr(result, 'raw') else str(result), file_name=f"nova_triage_{log_id}.md")
-            if st.button("💾 Save as JSON"):
-                save_report({"log_id": log_id, "report": str(result)}, f"nova_report_{log_id}.json")
+            # Action buttons
+            st.download_button("📥 Download Report (MD)", result.raw if hasattr(result, 'raw') else str(result), file_name=f"nova_sentinel_report.md")
+            if st.button("💾 Save to Global Repository"):
+                save_report({"model": model_choice, "report": str(result)}, "nova_sentinel_log.json")
                 st.toast("Report saved locally.")
+
+    # Memory Hub Mockup (Phase 2 Visual)
+    st.divider()
+    st.subheader("🧠 Memory & Knowledge Hub")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.info("**Knowledge Base Status**: 30 MITRE techniques active in ChromaDB.")
+    with col2:
+        st.info("**Short-term Memory**: Enabled (stores task outputs for contextual reasoning).")
 
 if __name__ == "__main__":
     main()

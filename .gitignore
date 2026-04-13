@@ -62,6 +62,7 @@ nova_report.json
 nova_report.md
 nova_sentinel_log.json
 outputs/
+test_data/
 
 # --- Test Data ---
 # Keep the directory structure but ignore specific large generated datasets if preferred

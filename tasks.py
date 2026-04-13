@@ -4,35 +4,35 @@ from textwrap import dedent
 class NovaTasks:
     def parse_task(self, agent, log_input):
         return Task(
-            description=f"Parse this log into clean JSON structure, extracting IP, User, and Action: {log_input}",
-            expected_output="Structured JSON data containing extracted security metadata.",
+            description=f"Analyze and parse this log input: {log_input}. If it points to an external file, use your File Reader tool.",
+            expected_output="Structured JSON of entities (IPs, users, actions) found in the log.",
             agent=agent
         )
 
     def analyze_task(self, agent):
         return Task(
             description=dedent("""
-                Analyze the provided log JSON data for security threats.
-                1. Identify potential malicious patterns.
-                2. Map the behavior to MITRE ATT&CK techniques.
-                3. Calculate a risk score (0-100) using your tool (Severity and Confidence).
-                4. Explain your expert reasoning (Chain of Thought).
+                1. Take the parsed log entities and perform a RAG Search for matching MITRE ATT&CK techniques.
+                2. Identify the likely Attack Vector (e.g., Initial Access, Persistence).
+                3. Calculate the Risk Score (0-100) based on severity and confidence.
+                4. Incorporate previous memory results if a similar attack was seen before.
+                5. Detail your reasoning step-by-step.
             """),
-            expected_output="Detailed threat analysis including risk score, MITRE mappings, and reasoning.",
+            expected_output="A deep threat analysis including technical IDs (e.g. T1566) and a contextual risk score.",
             agent=agent
         )
 
     def report_task(self, agent):
         return Task(
             description=dedent("""
-                Generate a final human-readable Security Triage Report.
-                The report must include:
-                - Executive Summary (Severity Badge)
-                - Technical Breakdown (Entities, Mappings)
-                - Risk Analysis (Score & Reasoning)
-                - Recommendations (Remediation steps)
-                Output final report as professional Markdown.
+                Synthesize all agent findings and tool results into the Final Sentinel Report.
+                The report must be executive-grade and include:
+                - Threat Summary with Severity Badge
+                - RAG-Augmented MITRE Context
+                - Detailed Risk Breakdown
+                - Persistence & Memory Context (if applicable)
+                - Technical Recommendations for Remediation
             """),
-            expected_output="A polished, executive-level security triage report in Markdown format.",
+            expected_output="A professional, structured Markdown report representing the definitive Phase 2 triage.",
             agent=agent
         )
