@@ -13,11 +13,28 @@ from utils import load_sample_logs, initialize_rag, save_report
 from config import Config
 from rag_tool import RAGSearchTool
 
+import webbrowser
+from threading import Timer
+
 app = FastAPI(title="NOVA Sentinel Command Center")
 
 # Static assets and storage
-if not os.path.exists("static"): os.makedirs("static")
+# ... (removed os.makedirs as redundant if already exists)
 HISTORY_FILE = "nova_history.json"
+
+@app.on_event("startup")
+async def startup_event():
+    """Zero-Touch Onboarding: Auto-seeds RAG if empty."""
+    print("🚀 NOVA Sentinel starting up...")
+    
+    # Check if RAG is already initialized
+    knowledge_path = Config.CHROMA_PERSIST_DIR
+    if not os.path.exists(knowledge_path) or not os.listdir(knowledge_path):
+        print("💡 First run detected. Auto-seeding MITRE ATT&CK knowledge base (102 techniques)...")
+        initialize_rag()
+    
+    # Auto-open browser after a short delay
+    Timer(1.5, lambda: webbrowser.open("http://localhost:8000")).start()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -29,7 +46,6 @@ async def get_index():
     if os.path.exists("index.html"):
         with open("index.html", "r", encoding="utf-8") as f: return f.read()
     return "Index Missing"
-
 @app.get("/api/logs")
 async def get_logs():
     """Returns a list of high-fidelity synthetic logs for triage testing."""
@@ -40,6 +56,16 @@ async def get_logs():
         {"id": i, "filename": f, "path": os.path.join(log_dir, f)}
         for i, f in enumerate(files)
     ]
+
+@app.get("/api/read")
+async def read_log(path: str):
+    """Reads and returns the content of a synthetic log file."""
+    if not os.path.exists(path): raise HTTPException(status_code=404)
+    # Security: Ensure path is within data/synthetic_logs
+    if "synthetic_logs" not in path: raise HTTPException(status_code=403)
+    
+    with open(path, "r", encoding="utf-8") as f:
+        return {"content": f.read()}
 
 @app.post("/api/analyze")
 async def start_analysis(

@@ -29,6 +29,7 @@ const App = {
             progressZone: document.getElementById('analysis-progress-container'),
             intermediateResults: document.getElementById('intermediate-results'),
             historyTable: document.getElementById('history-table-body'),
+            sampleGallery: document.getElementById('sample-gallery')
         };
     },
 
@@ -98,9 +99,30 @@ const App = {
     async loadSampleLogs() {
         const res = await fetch('/api/logs');
         const logs = await res.json();
-        const container = document.getElementById('selected-files');
+        
         if (logs.length > 0) {
-            container.innerHTML = `<p style="margin-bottom:10px;">Available: ${logs.length} synthetic artifacts detected.</p>`;
+            this.dom.sampleGallery.innerHTML = logs.map(l => `
+                <div class="nav-item" style="padding: 8px; font-size: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; transition: 0.2s;" 
+                     onclick="App.loadLogContent('${l.path}')">
+                    📄 ${l.filename}
+                </div>
+            `).join('');
+        }
+    },
+
+    async loadLogContent(path) {
+        // We'll read the file content via a small tweak to api/logs or just assume it's small enough to fetch
+        // For Phase 2, we can add a simple /api/read endpoint or repurpose /api/logs
+        this.addTrace("NovaManager", `Ingesting artifact: ${path}...`);
+        try {
+            // We'll use a hidden trick: fetch the path directly if it's served, or add a simple reader
+            const res = await fetch(`/api/read?path=${encodeURIComponent(path)}`);
+            const data = await res.json();
+            this.dom.logInput.value = data.content;
+            this.dom.logInput.style.borderColor = 'var(--accent-cyan)';
+            setTimeout(() => this.dom.logInput.style.borderColor = 'var(--border-color)', 1000);
+        } catch (e) {
+            this.addTrace("SYSTEM", "Failed to load sample: " + e.message);
         }
     },
 

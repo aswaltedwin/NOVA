@@ -130,12 +130,21 @@
                             <textarea id="log-input" style="width:100%; height: 120px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); color: white; padding: 15px; border-radius: 8px; font-family: 'Fira Code', monospace;" placeholder="Paste raw telemetry data..."></textarea>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <label style="display:block; margin-bottom: 10px; font-size: 0.7rem; text-transform: uppercase;">Mission Model</label>
-                        <select id="model-select" style="width:100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border-color); color: white; border-radius: 6px; margin-bottom: 20px;"></select>
-                        <button class="btn btn-primary" id="run-analysis-btn" style="width:100%;" onclick="App.startAnalysis()">
-                            🚀 Initiate Triage
-                        </button>
+                    <div>
+                        <div class="stat-card" style="margin-bottom: 20px;">
+                            <h3 style="font-size: 0.9rem; margin-bottom: 15px;">Synthetic Intelligence Gallery</h3>
+                            <div id="sample-gallery" style="display: flex; flex-direction: column; gap: 8px;">
+                                <!-- Samples injected here -->
+                                <div class="text-secondary" style="font-size: 0.75rem;">Loading samples...</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <label style="display:block; margin-bottom: 10px; font-size: 0.7rem; text-transform: uppercase;">Mission Model</label>
+                            <select id="model-select" style="width:100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border-color); color: white; border-radius: 6px; margin-bottom: 20px;"></select>
+                            <button class="btn btn-primary" id="run-analysis-btn" style="width:100%;" onclick="App.startAnalysis()">
+                                🚀 Initiate Triage
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
