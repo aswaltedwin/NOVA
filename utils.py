@@ -41,10 +41,16 @@ def initialize_rag():
     from rag_tool import RAGSearchTool
     rag = RAGSearchTool()
     
+    # Optional: Clear existing data for a clean reset if necessary
+    # rag.collection.delete(where={"id": {"$ne": ""}}) # Simplified reset logic
+    
     docs = [f"ID: {item['id']} | Name: {item['name']} | Description: {item['description']}" for item in MITRE_DATA]
     ids = [item['id'] for item in MITRE_DATA]
+    
+    # Upsert allows both initial seeding and updates
     rag.add_knowledge(documents=docs, ids=ids)
-    return f"Initialized RAG with {len(ids)} MITRE ATT&CK entries."
+    return f"Successfully synced {len(ids)} MITRE ATT&CK entries to local knowledge base."
+
 
 def load_sample_logs():
     """Legacy/Phase 1 sample logs for testing."""

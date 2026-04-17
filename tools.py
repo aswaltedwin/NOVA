@@ -1,11 +1,17 @@
 from crewai.tools import BaseTool
+from pydantic import BaseModel, Field
 import json
 import os
 from typing import Dict, Any, Optional
 
+class FileReaderSchema(BaseModel):
+    """Input for FileReaderTool."""
+    file_path: str = Field(..., description="The relative or absolute path to the local file.")
+
 class FileReaderTool(BaseTool):
     name: str = "Local File Reader"
     description: str = "Reads sensitive local log files or threat intelligence documents for context."
+    args_schema: type[BaseModel] = FileReaderSchema
 
     def _run(self, file_path: str) -> str:
         """Reads a file from the local workspace."""
@@ -18,9 +24,16 @@ class FileReaderTool(BaseTool):
         except Exception as e:
             return f"Error reading file: {str(e)}"
 
+class RiskCalculatorSchema(BaseModel):
+    """Input for RiskCalculatorTool."""
+    severity: str = Field(..., description="Severity level: low, medium, high, or critical.")
+    confidence: float = Field(..., description="Confidence score from 0.0 to 1.0.")
+    context: Optional[str] = Field(None, description="Additional context or matching MITRE techniques.")
+
 class RiskCalculatorTool(BaseTool):
     name: str = "Advanced Risk Score Calculator"
     description: str = "Calculates threat risk score (0-100) based on severity, confidence, and environmental context."
+    args_schema: type[BaseModel] = RiskCalculatorSchema
 
     def _run(self, severity: str, confidence: float, context: Optional[str] = None) -> str:
         """As specified: severity (low/medium/high/critical) and confidence (0.0-1.0)."""
@@ -39,4 +52,5 @@ class RiskCalculatorTool(BaseTool):
         elif final_score >= 55: risk_level = "HIGH"
         elif final_score >= 40: risk_level = "MEDIUM"
         
-        return f"Risk Score: {final_score} (Level: {risk_level}) Based on Severity {severity}, Confidence {confidence}, and context: {context[:50]}..."
+        return f"Risk Score: {final_score} (Level: {risk_level}) Based on Severity {severity}, Confidence {confidence}, and context: {context[:50] if context else 'None'}..."
+

@@ -18,7 +18,6 @@ def run_nova_sentinel(log_input, model_name):
     parser_agent = agents.log_parser_agent()
     analyzer_agent = agents.threat_analyzer_agent()
     reporter_agent = agents.report_generator_agent()
-    manager_agent = agents.nova_manager()
 
     # Define the workflow (Hierarchical)
     crew = Crew(
@@ -28,12 +27,10 @@ def run_nova_sentinel(log_input, model_name):
             tasks.analyze_task(analyzer_agent),
             tasks.report_task(reporter_agent)
         ],
-        process=Process.hierarchical,
-        manager_agent=manager_agent,
-        manager_llm=Config.get_llm(model_name),
+        process=Process.sequential,
         verbose=True,
         memory=True, # CrewAI built-in memory
-        embedder=Config.get_embedder() # Use local HuggingFace embedder
+        embedder=Config.get_embedder() # Uses local Ollama model (nomic-embed-text)
     )
 
     return crew.kickoff()
@@ -44,7 +41,7 @@ def main():
 
     # Sidebar for control
     st.sidebar.header("NOVA Command Hub")
-    model_choice = st.sidebar.selectbox("Local Ollama Model", ["qwen2.5:14b", "deepseek-r1", "llama3.3"], index=0)
+    model_choice = st.sidebar.selectbox("Local/Cloud Ollama Model", ["deepseek-v3.1:671b-cloud", "qwen2.5:7b", "deepseek-r1", "llama3.3"], index=0)
     
     # RAG Init Status
     if st.sidebar.button("⚙️ Initialize/Reset RAG Knowledge Base"):

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOVA 🛡️ Sentinel Sanctum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --obsidian: #0a0a0c;
+            --gold: #d4af37;
+            --gold-glow: rgba(212, 175, 55, 0.3);
+            --sentinel-blue: #00d4ff;
+            --glass: rgba(20, 20, 25, 0.7);
+            --border: rgba(212, 175, 55, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: radial-gradient(circle at center, #1a1a2e 0%, var(--obsidian) 100%);
+            color: #e0e0e0;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Grand Background Elements */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            z-index: 2;
+            padding: 40px 0;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 3.5rem;
+            color: var(--gold);
+            text-shadow: 0 0 20px var(--gold-glow);
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--sentinel-blue);
+            opacity: 0.8;
+        }
+
+        /* Dashboard Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+        }
+
+        /* Glass Panels */
+        .panel {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .panel:hover {
+            border-color: var(--gold);
+        }
+
+        h2 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Inputs & Controls */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            color: var(--gold);
+            opacity: 0.7;
+        }
+
+        select, textarea, input {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        select:focus, textarea:focus {
+            border-color: var(--sentinel-blue);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, var(--gold), #b38f00);
+            border: none;
+            border-radius: 6px;
+            color: var(--obsidian);
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: filter 0.3s, transform 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            filter: brightness(1.2);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            margin-bottom: 20px;
+        }
+
+        /* Results Area */
+        .results-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .log-panel {
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 15px;
+            color: #88ff88;
+        }
+
+        .report-panel {
+            min-height: 400px;
+            line-height: 1.6;
+        }
+
+        .report-content {
+            white-space: pre-wrap;
+            font-size: 1rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            background: var(--sentinel-blue);
+            color: var(--obsidian);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--obsidian); }
+        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(212, 175, 55, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--gold);
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>N.O.V.A</h1>
+            <div class="subtitle">Sentinel Sanctum Phase 2</div>
+        </header>
+
+        <div class="dashboard">
+            <!-- Sidebar / Control Panel -->
+            <div class="sidebar">
+                <div class="panel">
+                    <h2>⚙️ Command Hub</h2>
+                    
+                    <button class="btn btn-secondary" onclick="initRAG()" id="ragBtn">Initialize Knowledge Base</button>
+                    
+                    <div class="input-group">
+                        <label>Intelligence Source</label>
+                        <select id="logSource" onchange="handleSourceChange()">
+                            <option value="direct">Direct Log Entry</option>
+                            <option value="sample">Sample Dataset</option>
+                        </select>
+                    </div>
+
+                    <div id="sampleSelectGroup" class="input-group" style="display:none;">
+                        <label>Select Sample Intelligence</label>
+                        <select id="sampleLogs"></select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Model Configuration</label>
+                        <select id="modelChoice">
+                            <option value="deepseek-v3.1:671b-cloud">DeepSeek V3.1 Cloud</option>
+                            <option value="qwen2.5:7b">Qwen 2.5 (Local)</option>
+                            <option value="deepseek-r1">DeepSeek R1 (Local)</option>
+                            <option value="llama3.3">Llama 3.3 (Local)</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Raw Signal Input</label>
+                        <textarea id="logInput" rows="8" placeholder="Paste security logs here..."></textarea>
+                    </div>
+
+                    <button class="btn" onclick="runTriage()" id="runBtn">
+                        🚀 Execute Sentinel Triage
+                    </button>
+                    <div id="loading" style="margin-top: 15px; text-align: center;">
+                        <div class="spinner" id="spinner"></div>
+                        <p id="statusMsg" style="font-size: 0.8rem; margin-top: 10px; color: var(--gold); display: none;">Agents Collaborating...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Results Area -->
+            <div class="results-container">
+                <div class="panel">
+                    <h2>🕵️ Collaboration Logs</h2>
+                    <div class="log-panel" id="collabLog">
+                        > System initialized.<br>
+                        > Ready for intelligence input...
+                    </div>
+                </div>
+
+                <div class="panel report-panel">
+                    <h2>📊 Sentinel Security Report</h2>
+                    <div id="reportBadge" class="status-badge" style="display:none;">CRITICAL THREAT DETECTED</div>
+                    <div class="report-content" id="reportContent">
+                        Waiting for mission execution... 
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Store
+        let samples = [];
+
+        // Initialization
+        window.onload = async () => {
+            await fetchSamples();
+        };
+
+        async function fetchSamples() {
+            try {
+                const res = await fetch('/api/logs');
+                samples = await res.json();
+                const select = document.getElementById('sampleLogs');
+                select.innerHTML = samples.map(s => `<option value="${s.id}">Log ${s.id}: ${s.label}</option>`).join('');
+                
+                // Set default if sample chosen
+                select.onchange = () => {
+                   const found = samples.find(s => s.id == select.value);
+                   if(found) document.getElementById('logInput').value = found.raw;
+                };
+            } catch (e) {
+                addLog("Error fetching samples: " + e.message, "error");
+            }
+        }
+
+        function handleSourceChange() {
+            const source = document.getElementById('logSource').value;
+            const sampleGroup = document.getElementById('sampleSelectGroup');
+            if(source === 'sample') {
+                sampleGroup.style.display = 'block';
+                const select = document.getElementById('sampleLogs');
+                const found = samples.find(s => s.id == select.value);
+                if(found) document.getElementById('logInput').value = found.raw;
+            } else {
+                sampleGroup.style.display = 'none';
+            }
+        }
+
+        async function initRAG() {
+            const btn = document.getElementById('ragBtn');
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/init-rag');
+                const data = await res.json();
+                addLog("> " + data.message);
+                btn.innerText = "Knowledge Base Synced";
+            } catch (e) {
+                addLog("> Error initializing RAG: " + e.message);
+                btn.innerText = "Initialization Failed";
+                btn.disabled = false;
+            }
+        }
+
+        async function runTriage() {
+            const logInput = document.getElementById('logInput').value;
+            const modelName = document.getElementById('modelChoice').value;
+            const runBtn = document.getElementById('runBtn');
+            const spinner = document.getElementById('spinner');
+            const statusMsg = document.getElementById('statusMsg');
+
+            if(!logInput) {
+                alert("Please provide raw signal input.");
+                return;
+            }
+
+            // UI State
+            runBtn.disabled = true;
+            spinner.style.display = 'block';
+            statusMsg.style.display = 'block';
+            addLog("> Initiating Sentinel Triage Protocol...");
+            addLog("> Deploying ParserAgent and AnalyzerAgent...");
+
+            try {
+                const response = await fetch('/api/triage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ log_input: logInput, model_name: modelName })
+                });
+
+                const data = await response.json();
+                
+                if(data.status === 'success') {
+                    document.getElementById('reportContent').innerText = data.result;
+                    document.getElementById('reportBadge').style.display = 'inline-block';
+                    addLog("> Triage complete. Report synthesized.");
+                } else {
+                    addLog("> Error: " + data.message);
+                }
+            } catch (e) {
+                addLog("> Critical failure: " + e.message);
+            } finally {
+                runBtn.disabled = false;
+                spinner.style.display = 'none';
+                statusMsg.style.display = 'none';
+            }
+        }
+
+        function addLog(msg) {
+            const log = document.getElementById('collabLog');
+            log.innerHTML += `<br>${msg}`;
+            log.scrollTop = log.scrollHeight;
+        }
+    </script>
+</body>
+</html>

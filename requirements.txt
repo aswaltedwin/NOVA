@@ -11,3 +11,5 @@ streamlit
 python-dotenv
 pydantic>=2.10.0
 embedchain>=0.1.0
+fastapi
+uvicorn

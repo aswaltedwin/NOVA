@@ -6,7 +6,7 @@ from crewai import LLM
 # NOVA Phase 2: Agentic & RAG-Enabled Configuration
 class Config:
     # Model Settings
-    MODEL_NAME = "ollama/qwen2.5:14b"
+    MODEL_NAME = "ollama/deepseek-v3.1:671b-cloud"
     BASE_URL = "http://localhost:11434"
     
     # RAG Settings
@@ -34,12 +34,12 @@ class Config:
 
     @classmethod
     def get_embedder(cls):
-        """Returns a local embedder to ensure 100% offline memory without OpenAI."""
+        """Returns a standardized local embedder configuration for CrewAI memory."""
         return {
-            "provider": "huggingface",
+            "provider": "ollama",
             "config": {
-                "model": cls.EMBEDDING_MODEL,
-                # Force local-only
+                "model": "nomic-embed-text:latest",
+                "base_url": cls.BASE_URL
             }
         }
 

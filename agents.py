@@ -12,46 +12,27 @@ class NovaAgents:
 
     def log_parser_agent(self):
         return Agent(
-            role="LogParserAgent",
-            goal="Parse and normalize raw security logs into structured JSON data.",
-            backstory="Experienced in log architecture, regex, and extracting entities from raw cybersecurity telemetry.",
+            role="ParserAgent",
+            goal="Normalize raw logs into structured JSON entities.",
+            backstory="Security data engineer specializing in log normalization.",
             tools=[self.file_reader_tool],
             llm=self.llm,
-            verbose=True,
-            memory=True,
-            allow_delegation=False
         )
 
     def threat_analyzer_agent(self):
         return Agent(
-            role="ThreatAnalyzerAgent",
-            goal="Analyze security threats, map them to MITRE ATT&CK using RAG, and calculate risk scores.",
-            backstory="Senior Threat Hunter with deep expertise in adversary TTPs. Always use the RAG Search Tool to verify technical IDs.",
+            role="AnalyzerAgent",
+            goal="Map anomalies to MITRE ATT&CK via RAG and score risk.",
+            backstory="Threat researcher using MITRE and RAG context.",
             tools=[self.rag_search_tool, self.risk_calc_tool],
             llm=self.llm,
-            verbose=True,
-            memory=True,
-            allow_delegation=False
         )
 
     def report_generator_agent(self):
         return Agent(
-            role="ReportGeneratorAgent",
-            goal="Create clear, actionable, and human-readable triage reports with executive summaries.",
-            backstory="Expert SOC Analyst and technical writer focused on incident response communication.",
+            role="ReporterAgent",
+            goal="Summarize findings into a clear Markdown triage report.",
+            backstory="SOC Analyst focused on concise status reporting.",
             llm=self.llm,
-            verbose=True,
-            memory=True,
-            allow_delegation=False
         )
 
-    def nova_manager(self):
-        return Agent(
-            role="NovaManager",
-            goal="Orchestrate the entire cyber triage lifecycle, resolve agent conflicts, and ensure final report quality.",
-            backstory="Advanced AI supervisor coordinating specialized security agents for high-fidelity threat intelligence. You review all agent outputs and make the final call.",
-            llm=self.llm,
-            verbose=True,
-            memory=True,
-            allow_delegation=True
-        )
