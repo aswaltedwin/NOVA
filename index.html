@@ -3,409 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOVA 🛡️ Sentinel Sanctum</title>
+    <title>NOVA 🛡️ Sentinel Command Center</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --obsidian: #0a0a0c;
-            --gold: #d4af37;
-            --gold-glow: rgba(212, 175, 55, 0.3);
-            --sentinel-blue: #00d4ff;
-            --glass: rgba(20, 20, 25, 0.7);
-            --border: rgba(212, 175, 55, 0.2);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            background: radial-gradient(circle at center, #1a1a2e 0%, var(--obsidian) 100%);
-            color: #e0e0e0;
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* Grand Background Elements */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
-            opacity: 0.05;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .container {
-            width: 90%;
-            max-width: 1200px;
-            z-index: 2;
-            padding: 40px 0;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 50px;
-            animation: fadeInDown 1s ease-out;
-        }
-
-        h1 {
-            font-family: 'Cinzel', serif;
-            font-size: 3.5rem;
-            color: var(--gold);
-            text-shadow: 0 0 20px var(--gold-glow);
-            letter-spacing: 4px;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            font-size: 1.1rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--sentinel-blue);
-            opacity: 0.8;
-        }
-
-        /* Dashboard Grid */
-        .dashboard {
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 30px;
-        }
-
-        /* Glass Panels */
-        .panel {
-            background: var(--glass);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: transform 0.3s ease, border-color 0.3s ease;
-        }
-
-        .panel:hover {
-            border-color: var(--gold);
-        }
-
-        h2 {
-            font-family: 'Cinzel', serif;
-            color: var(--gold);
-            font-size: 1.4rem;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        /* Inputs & Controls */
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-            color: var(--gold);
-            opacity: 0.7;
-        }
-
-        select, textarea, input {
-            width: 100%;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: white;
-            padding: 12px;
-            border-radius: 6px;
-            font-family: 'Inter', sans-serif;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        select:focus, textarea:focus {
-            border-color: var(--sentinel-blue);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(45deg, var(--gold), #b38f00);
-            border: none;
-            border-radius: 6px;
-            color: var(--obsidian);
-            font-family: 'Cinzel', serif;
-            font-weight: bold;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: filter 0.3s, transform 0.2s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .btn:hover {
-            filter: brightness(1.2);
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            border: 1px solid var(--gold);
-            color: var(--gold);
-            margin-bottom: 20px;
-        }
-
-        /* Results Area */
-        .results-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .log-panel {
-            height: 200px;
-            overflow-y: auto;
-            font-family: 'Fira Code', monospace;
-            font-size: 0.85rem;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.05);
-            padding: 15px;
-            color: #88ff88;
-        }
-
-        .report-panel {
-            min-height: 400px;
-            line-height: 1.6;
-        }
-
-        .report-content {
-            white-space: pre-wrap;
-            font-size: 1rem;
-        }
-
-        /* Animations */
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            margin-bottom: 15px;
-            background: var(--sentinel-blue);
-            color: var(--obsidian);
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: var(--obsidian); }
-        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
-
-        .spinner {
-            display: none;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(212, 175, 55, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--gold);
-            animation: spin 1s ease-in-out infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-    </style>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>N.O.V.A</h1>
-            <div class="subtitle">Sentinel Sanctum Phase 2</div>
-        </header>
 
-        <div class="dashboard">
-            <!-- Sidebar / Control Panel -->
-            <div class="sidebar">
-                <div class="panel">
-                    <h2>⚙️ Command Hub</h2>
-                    
-                    <button class="btn btn-secondary" onclick="initRAG()" id="ragBtn">Initialize Knowledge Base</button>
-                    
-                    <div class="input-group">
-                        <label>Intelligence Source</label>
-                        <select id="logSource" onchange="handleSourceChange()">
-                            <option value="direct">Direct Log Entry</option>
-                            <option value="sample">Sample Dataset</option>
-                        </select>
-                    </div>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="brand">
+            <span style="font-size: 1.8rem;">🛡️</span>
+            <span>NOVA</span>
+        </div>
+        
+        <nav>
+            <ul class="nav-list">
+                <li class="nav-item active" data-page="dashboard">
+                    <span>📊</span> Dashboard
+                </li>
+                <li class="nav-item" data-page="analysis">
+                    <span>🚀</span> New Analysis
+                </li>
+                <li class="nav-item" data-page="results">
+                    <span>📑</span> Results View
+                </li>
+                <li class="nav-item" data-page="history">
+                    <span>🕒</span> Mission History
+                </li>
+                <li class="nav-item" data-page="settings">
+                    <span>⚙️</span> Control Panel
+                </li>
+            </ul>
+        </nav>
 
-                    <div id="sampleSelectGroup" class="input-group" style="display:none;">
-                        <label>Select Sample Intelligence</label>
-                        <select id="sampleLogs"></select>
-                    </div>
-
-                    <div class="input-group">
-                        <label>Model Configuration</label>
-                        <select id="modelChoice">
-                            <option value="deepseek-v3.1:671b-cloud">DeepSeek V3.1 Cloud</option>
-                            <option value="qwen2.5:7b">Qwen 2.5 (Local)</option>
-                            <option value="deepseek-r1">DeepSeek R1 (Local)</option>
-                            <option value="llama3.3">Llama 3.3 (Local)</option>
-                        </select>
-                    </div>
-
-                    <div class="input-group">
-                        <label>Raw Signal Input</label>
-                        <textarea id="logInput" rows="8" placeholder="Paste security logs here..."></textarea>
-                    </div>
-
-                    <button class="btn" onclick="runTriage()" id="runBtn">
-                        🚀 Execute Sentinel Triage
-                    </button>
-                    <div id="loading" style="margin-top: 15px; text-align: center;">
-                        <div class="spinner" id="spinner"></div>
-                        <p id="statusMsg" style="font-size: 0.8rem; margin-top: 10px; color: var(--gold); display: none;">Agents Collaborating...</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Main Results Area -->
-            <div class="results-container">
-                <div class="panel">
-                    <h2>🕵️ Collaboration Logs</h2>
-                    <div class="log-panel" id="collabLog">
-                        > System initialized.<br>
-                        > Ready for intelligence input...
-                    </div>
-                </div>
-
-                <div class="panel report-panel">
-                    <h2>📊 Sentinel Security Report</h2>
-                    <div id="reportBadge" class="status-badge" style="display:none;">CRITICAL THREAT DETECTED</div>
-                    <div class="report-content" id="reportContent">
-                        Waiting for mission execution... 
-                    </div>
-                </div>
+        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border-color);">
+            <div class="status-badge" style="background: rgba(0, 245, 255, 0.1); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); padding: 8px; border-radius: 6px; font-size: 0.75rem; text-align: center;">
+                SENTINEL ACTIVE v2.0
             </div>
         </div>
-    </div>
+    </aside>
 
-    <script>
-        // Data Store
-        let samples = [];
+    <!-- Main Content Area -->
+    <main class="main-content" id="main-content">
+        
+        <!-- Dashboard Section -->
+        <section id="page-dashboard" class="page-section">
+            <header style="margin-bottom: 40px;">
+                <h1>Command Dashboard</h1>
+                <p class="text-secondary">Global threat landscape and system overview.</p>
+            </header>
 
-        // Initialization
-        window.onload = async () => {
-            await fetchSamples();
-        };
+            <div class="grid-dashboard" id="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-label">Total Sessions</div>
+                    <div class="stat-value" id="stat-total">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Avg. Risk Score</div>
+                    <div class="stat-value" id="stat-risk" style="color: var(--accent-cyan);">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Ollama Node</div>
+                    <div class="stat-value" id="stat-ollama" style="color: var(--accent-green);">ONLINE</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Memory Utilization</div>
+                    <div class="stat-value" id="stat-memory">2.4 GB</div>
+                </div>
+            </div>
 
-        async function fetchSamples() {
-            try {
-                const res = await fetch('/api/logs');
-                samples = await res.json();
-                const select = document.getElementById('sampleLogs');
-                select.innerHTML = samples.map(s => `<option value="${s.id}">Log ${s.id}: ${s.label}</option>`).join('');
-                
-                // Set default if sample chosen
-                select.onchange = () => {
-                   const found = samples.find(s => s.id == select.value);
-                   if(found) document.getElementById('logInput').value = found.raw;
-                };
-            } catch (e) {
-                addLog("Error fetching samples: " + e.message, "error");
-            }
-        }
+            <div class="grid-dashboard" style="grid-template-columns: 2fr 1fr;">
+                <div class="panel">
+                    <h2>Operational Risk Trend</h2>
+                    <div style="height: 250px; margin-top: 20px;">
+                        <canvas id="riskTrendChart"></canvas>
+                    </div>
+                </div>
+                <div class="panel">
+                    <h2>Active Techniques</h2>
+                    <div id="mitre-technique-list" style="margin-top: 20px; font-size: 0.85rem;">
+                        <div class="nav-item">T1566: Phishing</div>
+                        <div class="nav-item">T1110: Brute Force</div>
+                        <div class="nav-item">T1071: C2 Protocols</div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-        function handleSourceChange() {
-            const source = document.getElementById('logSource').value;
-            const sampleGroup = document.getElementById('sampleSelectGroup');
-            if(source === 'sample') {
-                sampleGroup.style.display = 'block';
-                const select = document.getElementById('sampleLogs');
-                const found = samples.find(s => s.id == select.value);
-                if(found) document.getElementById('logInput').value = found.raw;
-            } else {
-                sampleGroup.style.display = 'none';
-            }
-        }
+        <!-- New Analysis Section -->
+        <section id="page-analysis" class="page-section" style="display:none;">
+            <header style="margin-bottom: 40px;">
+                <h1>Intelligence Triage Pipeline</h1>
+                <p class="text-secondary">Linear SOC workflow: Ingestion → Analysis → Review → Synthesis.</p>
+            </header>
 
-        async function initRAG() {
-            const btn = document.getElementById('ragBtn');
-            btn.innerText = "Processing...";
-            btn.disabled = true;
-            try {
-                const res = await fetch('/api/init-rag');
-                const data = await res.json();
-                addLog("> " + data.message);
-                btn.innerText = "Knowledge Base Synced";
-            } catch (e) {
-                addLog("> Error initializing RAG: " + e.message);
-                btn.innerText = "Initialization Failed";
-                btn.disabled = false;
-            }
-        }
+            <div class="stepper" id="analysis-stepper">
+                <div class="step active">
+                    <div class="step-icon">1</div>
+                    <div class="step-label">Ingestion</div>
+                </div>
+                <div class="step">
+                    <div class="step-icon">2</div>
+                    <div class="step-label">Analysis</div>
+                </div>
+                <div class="step">
+                    <div class="step-icon">3</div>
+                    <div class="step-label">Review</div>
+                </div>
+                <div class="step">
+                    <div class="step-icon">4</div>
+                    <div class="step-label">Synthesis</div>
+                </div>
+            </div>
 
-        async function runTriage() {
-            const logInput = document.getElementById('logInput').value;
-            const modelName = document.getElementById('modelChoice').value;
-            const runBtn = document.getElementById('runBtn');
-            const spinner = document.getElementById('spinner');
-            const statusMsg = document.getElementById('statusMsg');
+            <div id="analysis-input-container">
+                <div class="grid-dashboard" style="grid-template-columns: 2fr 1fr;">
+                    <div>
+                        <div class="drop-zone" id="drop-zone">
+                            <h3 style="color: var(--text-primary);">Drag & Drop Security Signals</h3>
+                            <p class="text-secondary">Supports .txt, .log, .json, and pcap artifacts</p>
+                            <input type="file" id="file-input" multiple style="display:none;">
+                            <div id="selected-files" style="margin-top: 15px; font-size: 0.8rem; color: var(--accent-cyan);"></div>
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <textarea id="log-input" style="width:100%; height: 120px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); color: white; padding: 15px; border-radius: 8px; font-family: 'Fira Code', monospace;" placeholder="Paste raw telemetry data..."></textarea>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <label style="display:block; margin-bottom: 10px; font-size: 0.7rem; text-transform: uppercase;">Mission Model</label>
+                        <select id="model-select" style="width:100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border-color); color: white; border-radius: 6px; margin-bottom: 20px;"></select>
+                        <button class="btn btn-primary" id="run-analysis-btn" style="width:100%;" onclick="App.startAnalysis()">
+                            🚀 Initiate Triage
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-            if(!logInput) {
-                alert("Please provide raw signal input.");
-                return;
-            }
+            <!-- XAI Trace Console -->
+            <div id="analysis-progress-container" style="display:none; margin-top: 20px;">
+                <div class="panel" style="background: #000; border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(0, 245, 255, 0.1);">
+                    <div style="display:flex; justify-content:space-between; margin-bottom: 15px;">
+                        <h2 style="font-size: 1rem;">🕵️ Agent Collaboration Console</h2>
+                        <span class="loading-pulse" style="color: var(--accent-cyan); font-size: 0.75rem;">LIVE TRACE ACTIVE</span>
+                    </div>
+                    <div id="xai-trace" style="height: 250px; overflow-y: auto; font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #88ff88; line-height: 1.6;">
+                        > [NovaManager] Deployment initiated...<br>
+                        > [ParserAgent] Normalizing telemetry streams...
+                    </div>
+                </div>
+            </div>
 
-            // UI State
-            runBtn.disabled = true;
-            spinner.style.display = 'block';
-            statusMsg.style.display = 'block';
-            addLog("> Initiating Sentinel Triage Protocol...");
-            addLog("> Deploying ParserAgent and AnalyzerAgent...");
+            <!-- HITL Review Zone -->
+            <div id="review-zone" style="display:none; margin-top: 40px; animation: fadeIn 0.5s ease;">
+                <h1 style="margin-bottom: 20px;">Analyst Validation Checkpoint</h1>
+                <div class="grid-dashboard" style="grid-template-columns: 2fr 1fr;">
+                    <div class="panel report-view" id="intermediate-results" style="max-height: 500px; overflow-y: auto;">
+                        <!-- Intermediate results injected here -->
+                    </div>
+                    <div class="stat-card">
+                        <h3>HITL Feedback</h3>
+                        <p class="text-secondary" style="font-size: 0.8rem; margin: 10px 0;">Correct findings or add mitigation context before mission completion.</p>
+                        <textarea id="analyst-feedback" style="width:100%; height: 100px; background: var(--bg-dark); border: 1px solid var(--border-color); color: white; border-radius: 6px; padding: 10px; margin-bottom: 20px;" placeholder="Add intelligence context..."></textarea>
+                        <button class="btn btn-primary" style="width:100%;" onclick="App.confirmAnalysis()">
+                            ✅ Confirm & Synthesize
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-            try {
-                const response = await fetch('/api/triage', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ log_input: logInput, model_name: modelName })
-                });
+            <!-- Final Result View -->
+            <div id="analysis-results-container" style="display:none; margin-top: 40px;">
+                <div class="panel report-view" id="report-content"></div>
+                <div style="margin-top: 24px; display: flex; gap: 16px;">
+                    <button class="btn btn-primary" onclick="window.print()">📥 Export Narrative</button>
+                    <button class="btn" style="border: 1px solid var(--border-color);" onclick="App.markConfirmed(true)">🎯 Confirm Insight</button>
+                    <button class="btn" style="border: 1px solid var(--border-color); color: var(--accent-red);" onclick="App.markConfirmed(false)">🚩 False Positive</button>
+                </div>
+            </div>
+        </section>
 
-                const data = await response.json();
-                
-                if(data.status === 'success') {
-                    document.getElementById('reportContent').innerText = data.result;
-                    document.getElementById('reportBadge').style.display = 'inline-block';
-                    addLog("> Triage complete. Report synthesized.");
-                } else {
-                    addLog("> Error: " + data.message);
-                }
-            } catch (e) {
-                addLog("> Critical failure: " + e.message);
-            } finally {
-                runBtn.disabled = false;
-                spinner.style.display = 'none';
-                statusMsg.style.display = 'none';
-            }
-        }
+        <!-- Results View Section -->
+        <section id="page-results" class="page-section" style="display:none;">
+            <header style="margin-bottom: 40px;">
+                <h1>Mission Synthesis</h1>
+                <p class="text-secondary">Detailed breakdown of the most recent analysis report.</p>
+            </header>
+            <div class="panel report-view" id="report-view-content" style="background: var(--bg-panel); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color);">
+                Please execute an analysis first to view results.
+            </div>
+        </section>
 
-        function addLog(msg) {
-            const log = document.getElementById('collabLog');
-            log.innerHTML += `<br>${msg}`;
-            log.scrollTop = log.scrollHeight;
-        }
-    </script>
+        <!-- History Section -->
+        <section id="page-history" class="page-section" style="display:none;">
+            <header style="margin-bottom: 40px;">
+                <h1>Mission Registry</h1>
+                <p class="text-secondary">Historical archive of all sentinel triage operations.</p>
+            </header>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Model</th>
+                        <th>Summary</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="history-table-body">
+                    <!-- History injected here -->
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="page-settings" class="page-section" style="display:none;">
+            <header style="margin-bottom: 40px;">
+                <h1>Control Panel</h1>
+                <p class="text-secondary">Global system configuration and health status.</p>
+            </header>
+            
+            <div class="grid-dashboard">
+                <div class="stat-card">
+                    <h3>System Health</h3>
+                    <div style="margin-top: 20px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                            <span>Ollama Node</span>
+                            <span id="ollama-status" style="color: var(--accent-green);">ONLINE</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                            <span>RAG Knowledge</span>
+                            <span id="rag-status" style="color: var(--accent-green);">SYNCED</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span>DDoS Shield</span>
+                            <span style="color: var(--accent-cyan);">ACTIVE</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Model Defaults</h3>
+                    <div style="margin-top: 20px;">
+                        <label style="display:block; margin-bottom:8px; font-size:0.75rem;">Global Preference</label>
+                        <select id="settings-model" style="width:100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border-color); color: white; border-radius: 6px;">
+                            <option>llama3.2</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="App.initRAG()" style="margin-top: 20px;">
+                ⚙️ Refresh RAG Knowledge Base
+            </button>
+        </section>
+
+    </main>
+
+    <script src="/static/app.js"></script>
 </body>
 </html>

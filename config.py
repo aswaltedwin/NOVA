@@ -6,7 +6,7 @@ from crewai import LLM
 # NOVA Phase 2: Agentic & RAG-Enabled Configuration
 class Config:
     # Model Settings
-    MODEL_NAME = "ollama/deepseek-v3.1:671b-cloud"
+    MODEL_NAME = "ollama/llama3.2"
     BASE_URL = "http://localhost:11434"
     
     # RAG Settings
