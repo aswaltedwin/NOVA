@@ -1,33 +1,33 @@
-# 🛡️ NOVA: Autonomous Multi-Agent SOC Command Center (Phase 2)
+# 🛡️ NOVA: Autonomous Multi-Agent Active Defense (Phase 3.1)
 
-**NOVA** (Network Operations Visual Analyst) is a 100% free, local, and autonomous multi-agent cybersecurity system. Transform your security logs into a professional triage mission with a premium, single-page command center.
+**NOVA** (Network Operations Visual Analyst) is an autonomous, semi-autonomous cybersecurity defense system. It doesn't just triage—it responds. Built for the modern SOC, NOVA combines agentic reasoning with local containment tools and multi-modal vision analysis.
 
 ---
 
-## 🌟 Key Features (Sentinel Upgrade)
+## 🌟 Key Features (Active Defense Upgrade)
 
-### 🕵️ Global Triage Center
-- **FastAPI + JS Architecture**: A lightning-fast, glassmorphic single-page application (SPA).
-- **Hierarchical Engine**: Controlled by a `NovaManager` supervisor, ensuring coordinated mission execution across Parser, Analyzer, and Reporter agents.
-- **Explainable AI (XAI)**: A live collaboration console streaming a real-time chain-of-thought trace from the agents.
+### 🛡️ Active Response Center (Phase 3.1)
+- **Semi-Autonomous Containment**: The `ResponderAgent` identifies optimal mitigation actions and generates step-by-step remediation playbooks.
+- **Simulation Safeguards**: All defensive actions (Firewall blocks, Process Isolation) run in **Simulation Mode** first, requiring human-in-the-loop (HITL) approval before execution.
+- **Audit Logging**: Every agent-suggested action is recorded in a persistent JSON audit trail for compliance and forensic review.
 
-### 🧠 Deep Intelligence (RAG)
-- **MITRE ATT&CK Mastery**: Built-in 100% local knowledge base covering **102 mapped MITRE techniques**.
-- **Learned Context**: Analysts can mark findings as "Confirmed" or "False Positive," updating the long-term vector memory for evolving defense.
+### 👁️ Multi-Modal Intelligence
+- **Computer Vision**: Analyze SIEM/EDR screenshots directly via the `ScreenshotAnalyzerTool` powered by **Llama-3.2-Vision**. 
+- **Auto-Ingestion**: Correlate visual alert evidence with raw log telemetry in a unified triage mission.
 
-### 📂 Synthetic Telemetry Repository
-- **Ready-to-Triage Data**: Includes 1000+ lines of realistic synthetic logs across Web, Network, Auth, and Lateral Movement categories.
-- **One-Click Loading**: Instantly ingest high-fidelity artifacts from the built-in **Intelligence Gallery**.
+### 🧠 Distributed Intelligence (RAG)
+- **100+ MITRE Techniques**: Expanded local knowledge base (ChromaDB) for high-fidelity threat mapping.
+- **Micro-Sandboxing**: Foundations for local containerized behavior analysis (SandboxAnalyzer) to return verdicts on suspicious binaries.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Orchestration**: [CrewAI](https://crewai.com) (Hierarchical Process)
-- **LLM Engine**: [Ollama](https://ollama.ai/) (Local `llama3.2` default)
+- **Orchestration**: [CrewAI](https://crewai.com) (Hierarchical Supervisor Process)
+- **LLM Engine**: [Ollama](https://ollama.ai/) (`llama3.2` and `llama3.2-vision`)
 - **Embeddings**: `sentence-transformers` (100% local)
 - **Backend**: FastAPI (Python)
-- **Frontend**: Vanilla JS + CSS (Premium Aesthetics)
+- **Visuals**: Chart.js & Vanilla CSS (Premium Command Center)
 - **Vector Base**: ChromaDB
 
 ---
@@ -35,9 +35,10 @@
 ## 🚀 Quick Start (Zero-Touch Onboarding)
 
 ### 1. Prerequisites
-Install [Ollama](https://ollama.ai/) and pull the local models:
+Install [Ollama](https://ollama.ai/) and pull the required local models:
 ```bash
 ollama pull llama3.2
+ollama pull llama3.2-vision
 ollama pull nomic-embed-text
 ```
 
@@ -55,23 +56,24 @@ python app.py
 ```
 
 > [!TIP]
-> **Zero-Touch Setup**: On the first run, NOVA will automatically detect the empty knowledge base and auto-seed it with 102 MITRE techniques. It will also automatically open your default browser to `http://localhost:8000`.
+> **Zero-Touch Setup**: On the first run, NOVA automatically seeds its MITRE knowledge base and opens the Command Center at `http://localhost:8000`.
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture (Phase 3)
 
-1.  **Ingestion**: `LogParserAgent` normalizes telemetry streams.
-2.  **Intelligence**: `ThreatAnalyzerAgent` maps anomalies to the expanded MITRE base.
-3.  **Human-in-the-Loop**: The analyst validates intermediate findings before the final synthesis.
-4.  **Learning**: Feedback is persisted into long-term vector memory to improve future missions.
+1.  **Ingestion**: `LogParserAgent` and `VisionTool` ingest multi-modal artifacts.
+2.  **Analysis**: `ThreatAnalyzerAgent` maps signals to the expanded RAG intelligence base.
+3.  **Containment**: `ResponderAgent` recommends OS-level actions based on risk scores (>75).
+4.  **HITL Approval**: The analyst approves, executes, or simulates actions through the **Response Center**.
+5.  **Learning**: Feedback is persisted into long-term memory to refine future containment logic.
 
 ---
 
-## 📊 Phase 3 Preview (Coming Soon)
-- **Computer Vision**: Analyze SOC screenshots with Llama-3.2-Vision.
-- **Active Defense**: Automated firewall/EDR isolation integration.
-- **Sandboxing**: Local container execution for malware analysis.
+## 📊 Phase 3.x Roadmap
+- **CACAO Playbooks**: Export standard actionable response playbooks.
+- **Full Sandboxing**: Complete `docker-py` integration for real-world malware detonating.
+- **Network Isolation**: Automated VLAN/Interface containment logic.
 
 ---
 
