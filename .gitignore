@@ -58,6 +58,7 @@ Thumbs.db
 
 # --- Project Specific Outputs ---
 *.log
+!data/synthetic_logs/*.log
 nova_report.json
 nova_report.md
 nova_sentinel_log.json

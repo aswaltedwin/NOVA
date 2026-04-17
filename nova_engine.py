@@ -56,3 +56,27 @@ def run_nova_report_stage(analysis_results, model_name):
         verbose=True
     )
     return crew.kickoff()
+
+def run_nova_response_stage(analysis_results, model_name):
+    """Stage 1.5: Generate active response recommendations based on analysis."""
+    agents = NovaAgents(model_name)
+    tasks = NovaTasks()
+    
+    manager = agents.manager_agent()
+    responder = agents.responder_agent()
+
+    crew = Crew(
+        agents=[responder],
+        tasks=[tasks.recommendation_task(responder, analysis_results)],
+        process=Process.hierarchical,
+        manager_agent=manager,
+        verbose=True
+    )
+    return crew.kickoff()
+
+def run_nova_vision_stage(image_path, model_name="llama3.2-vision"):
+    """Multi-modal stage: Analyze security screenshots via Llama-Vision."""
+    # This will be fully implemented in Module 2
+    from vision_tool import ScreenshotAnalyzerTool
+    vision_tool = ScreenshotAnalyzerTool()
+    return vision_tool._run(image_path)

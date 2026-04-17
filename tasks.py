@@ -35,8 +35,25 @@ class NovaTasks:
                 - Severity Badge & Summary
                 - MITRE Context (RAG)
                 - Risk Breakdown
-                - Remediation Steps
+                - Responder Recommendations (if high risk)
             """),
             expected_output="Final Markdown report for Phase 2 triage.",
+            agent=agent
+        )
+
+    def recommendation_task(self, agent, threat_context):
+        return Task(
+            description=dedent(f"""
+                Review the following threat analysis:
+                ---
+                {threat_context}
+                ---
+                Instructions:
+                1. Identify the most critical entities (IPs, PIDs, domains).
+                2. Use your tools to SIMULATE containment actions.
+                3. Categorize actions by risk (Low/Medium/High).
+                4. Generate a step-by-step remediation playbook.
+            """),
+            expected_output="A list of recommended response actions and a detailed playbook.",
             agent=agent
         )

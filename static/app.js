@@ -54,6 +54,7 @@ const App = {
         if (page === 'dashboard') this.loadDashboard();
         if (page === 'history') this.loadHistory();
         if (page === 'analysis') this.loadSampleLogs();
+        if (page === 'defense') this.loadAuditLog();
     },
 
     async loadDashboard() {
@@ -63,6 +64,22 @@ const App = {
         document.getElementById('stat-risk').innerText = data.stats.avg_risk + '%';
         document.getElementById('stat-ollama').innerText = data.ollama_status.toUpperCase();
         this.initChart();
+    },
+
+    async loadAuditLog() {
+        const res = await fetch('/api/history/audit');
+        const data = await res.json();
+        const container = document.getElementById('audit-log-container');
+        if (data.length > 0) {
+            container.innerHTML = data.reverse().map(l => `
+                <div style="margin-bottom:12px; border-left: 2px solid var(--accent-cyan); padding-left: 10px;">
+                    <div style="font-size: 0.7rem; color: var(--text-secondary);">${new Date(l.timestamp).toLocaleTimeString()}</div>
+                    <div style="font-weight: 600;">${l.tool}</div>
+                    <div style="font-size: 0.8rem;">Action: <span style="color: var(--accent-cyan);">${l.action}</span> on ${l.target}</div>
+                    <div class="badge" style="font-size: 0.6rem; padding: 2px 5px;">${l.state}</div>
+                </div>
+            `).join('');
+        }
     },
 
     initChart() {

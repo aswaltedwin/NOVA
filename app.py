@@ -144,6 +144,18 @@ async def learn_insight(document: str, id: Optional[str] = None):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+@app.get("/api/history/audit")
+async def get_audit_log():
+    from response_tools import AUDIT_LOG
+    if not os.path.exists(AUDIT_LOG): return []
+    with open(AUDIT_LOG, "r") as f: return json.load(f)
+
+@app.post("/api/action/execute")
+async def execute_action(action_id: int):
+    """Workflow: Human-in-the-loop Execution."""
+    # This will be fully implemented as a 'real' execution in later steps
+    return {"status": "success", "message": f"Action {action_id} executed successfully.", "timestamp": datetime.datetime.now().isoformat()}
+
 @app.get("/api/history")
 async def get_history():
     if not os.path.exists(HISTORY_FILE): return []
@@ -162,6 +174,22 @@ def save_to_history(job):
         "report": job["result"]
     })
     with open(HISTORY_FILE, "w") as f: json.dump(history[:50], f, indent=2)
+
+@app.post("/api/vision/analyze")
+async def analyze_vision(file: UploadFile = File(...)):
+    """Workflow Stage: Visual Intelligence."""
+    temp_path = f"static/uploads/{uuid.uuid4().hex}_{file.filename}"
+    os.makedirs("static/uploads", exist_ok=True)
+    
+    with open(temp_path, "wb") as f:
+        f.write(await file.read())
+        
+    try:
+        from nova_engine import run_nova_vision_stage
+        result = run_nova_vision_stage(temp_path)
+        return {"id": uuid.uuid4().hex, "status": "completed", "result": result, "image_path": temp_path}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 @app.get("/api/settings")
 async def get_settings():

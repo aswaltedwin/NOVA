@@ -31,6 +31,9 @@
                 <li class="nav-item" data-page="history">
                     <span>🕒</span> Mission History
                 </li>
+                <li class="nav-item" data-page="defense">
+                    <span>🛡️</span> Active Defense
+                </li>
                 <li class="nav-item" data-page="settings">
                     <span>⚙️</span> Control Panel
                 </li>
@@ -222,6 +225,31 @@
                     <!-- History injected here -->
                 </tbody>
             </table>
+        </section>
+
+        <!-- Active Defense Section -->
+        <section id="page-defense" class="page-section" style="display:none;">
+            <header style="margin-bottom: 40px;">
+                <h1>Response Center</h1>
+                <p class="text-secondary">Simulate and execute autonomous containment actions.</p>
+            </header>
+
+            <div class="grid-dashboard" style="grid-template-columns: 1fr 2fr;">
+                <div class="panel">
+                    <h2>Live Audit Log</h2>
+                    <div id="audit-log-container" style="margin-top:20px; font-size: 0.8rem; max-height: 400px; overflow-y: auto;">
+                        <p class="text-secondary">Listening for recommendations...</p>
+                    </div>
+                </div>
+                <div class="panel">
+                    <h2>Recommended Actions</h2>
+                    <div id="actions-container" style="margin-top:20px;">
+                        <div style="padding: 40px; text-align: center; border: 1px dashed var(--border-color); border-radius: 8px;">
+                            <p class="text-secondary">No active recommendations. Initiate a triage mission first.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- Settings Section -->
