@@ -20,7 +20,7 @@ class NovaAgents:
             role="NovaManager",
             goal="Oversee the end-to-end security mission, from triage to autonomous response recommendation.",
             backstory=dedent("""
-                You are the autonomous supervisor of NOVA Phase 3.
+                You are the autonomous supervisor of NOVA Phase 3.1.
                 Your mission is to oversee the Parser, Analyzer, and Responder agents.
                 If the calculated Risk Score is > 75, you MUST automatically delegate 
                 a task to the ResponderAgent to identify containment actions.

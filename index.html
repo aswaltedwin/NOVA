@@ -7,13 +7,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
 
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
         <div class="brand">
-            <span style="font-size: 1.8rem;">🛡️</span>
+            <span style="font-size: 2rem;">🛡️</span>
             <span>NOVA</span>
         </div>
         
@@ -23,26 +24,27 @@
                     <span>📊</span> Dashboard
                 </li>
                 <li class="nav-item" data-page="analysis">
-                    <span>🚀</span> New Analysis
+                    <span>🚀</span> Mission Triage
                 </li>
-                <li class="nav-item" data-page="results">
-                    <span>📑</span> Results View
-                </li>
-                <li class="nav-item" data-page="history">
-                    <span>🕒</span> Mission History
+                <li class="nav-item" data-page="vision">
+                    <span>👁️</span> Vision Intel
                 </li>
                 <li class="nav-item" data-page="defense">
-                    <span>🛡️</span> Active Defense
+                    <span>⚔️</span> Response Center
+                </li>
+                <li class="nav-item" data-page="history">
+                    <span>📜</span> Mission History
                 </li>
                 <li class="nav-item" data-page="settings">
-                    <span>⚙️</span> Control Panel
+                    <span>⚙️</span> System Config
                 </li>
             </ul>
         </nav>
 
-        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border-color);">
-            <div class="status-badge" style="background: rgba(0, 245, 255, 0.1); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); padding: 8px; border-radius: 6px; font-size: 0.75rem; text-align: center;">
-                SENTINEL ACTIVE v2.0
+        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border-gold);">
+            <div class="status-badge" style="background: rgba(212, 175, 55, 0.1); color: var(--accent-gold); border: 1px solid var(--border-gold); padding: 12px; border-radius: 12px; font-size: 0.75rem; text-align: center; font-weight: 600;">
+                <span class="pulse-gold" style="display:inline-block; width:8px; height:8px; background:var(--accent-gold); border-radius:50%; margin-right:8px;"></span>
+                SENTINEL SECURE v3.1
             </div>
         </div>
     </aside>
@@ -54,244 +56,196 @@
         <section id="page-dashboard" class="page-section">
             <header style="margin-bottom: 40px;">
                 <h1>Command Dashboard</h1>
-                <p class="text-secondary">Global threat landscape and system overview.</p>
+                <p style="color: var(--text-mid);">Global autonomous threat landscape overview.</p>
             </header>
 
-            <div class="grid-dashboard" id="dashboard-stats">
+            <div class="grid-dashboard">
                 <div class="stat-card">
-                    <div class="stat-label">Total Sessions</div>
-                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-label">Total Missions</div>
+                    <div class="stat-value" id="stat-total">--</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Avg. Risk Score</div>
-                    <div class="stat-value" id="stat-risk" style="color: var(--accent-cyan);">--</div>
+                    <div class="stat-label">Risk Index</div>
+                    <div class="stat-value" id="stat-risk" style="color: var(--status-red);">--</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Ollama Node</div>
-                    <div class="stat-value" id="stat-ollama" style="color: var(--accent-green);">ONLINE</div>
+                    <div class="stat-label">Neural Engine</div>
+                    <div class="stat-value" id="stat-ollama" style="color: var(--status-green);">ACTIVE</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Memory Utilization</div>
-                    <div class="stat-value" id="stat-memory">2.4 GB</div>
+                    <div class="stat-label">MITRE Coverage</div>
+                    <div class="stat-value" id="stat-mitre">102</div>
                 </div>
             </div>
 
-            <div class="grid-dashboard" style="grid-template-columns: 2fr 1fr;">
+            <div style="display: grid; grid-template-columns: 2fr 1.2fr; gap: 30px;">
                 <div class="panel">
-                    <h2>Operational Risk Trend</h2>
-                    <div style="height: 250px; margin-top: 20px;">
-                        <canvas id="riskTrendChart"></canvas>
-                    </div>
+                    <h2 style="margin-bottom: 20px; font-size: 1.2rem;">Threat Trajectory</h2>
+                    <canvas id="riskTrendChart" style="max-height: 300px;"></canvas>
                 </div>
                 <div class="panel">
-                    <h2>Active Techniques</h2>
-                    <div id="mitre-technique-list" style="margin-top: 20px; font-size: 0.85rem;">
-                        <div class="nav-item">T1566: Phishing</div>
-                        <div class="nav-item">T1110: Brute Force</div>
-                        <div class="nav-item">T1071: C2 Protocols</div>
+                    <h2 style="margin-bottom: 20px; font-size: 1.2rem;">Detected Techniques</h2>
+                    <div id="mitre-technique-list" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div class="nav-item" style="cursor: default; opacity: 0.8;">T1566: Phishing</div>
+                        <div class="nav-item" style="cursor: default; opacity: 0.8;">T1110: Brute Force</div>
+                        <div class="nav-item" style="cursor: default; opacity: 0.8;">T1027: Obfuscation</div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- New Analysis Section -->
+        <!-- Mission Triage Section -->
         <section id="page-analysis" class="page-section" style="display:none;">
             <header style="margin-bottom: 40px;">
-                <h1>Intelligence Triage Pipeline</h1>
-                <p class="text-secondary">Linear SOC workflow: Ingestion → Analysis → Review → Synthesis.</p>
+                <h1>Intelligence Triage</h1>
+                <p style="color: var(--text-mid);">Autonomous Ingestion & Cross-Signal Threat Mapping.</p>
             </header>
 
-            <div class="stepper" id="analysis-stepper">
-                <div class="step active">
-                    <div class="step-icon">1</div>
-                    <div class="step-label">Ingestion</div>
-                </div>
-                <div class="step">
-                    <div class="step-icon">2</div>
-                    <div class="step-label">Analysis</div>
-                </div>
-                <div class="step">
-                    <div class="step-icon">3</div>
-                    <div class="step-label">Review</div>
-                </div>
-                <div class="step">
-                    <div class="step-icon">4</div>
-                    <div class="step-label">Synthesis</div>
-                </div>
-            </div>
-
-            <div id="analysis-input-container">
-                <div class="grid-dashboard" style="grid-template-columns: 2fr 1fr;">
+            <div class="panel">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
                     <div>
-                        <div class="drop-zone" id="drop-zone">
-                            <h3 style="color: var(--text-primary);">Drag & Drop Security Signals</h3>
-                            <p class="text-secondary">Supports .txt, .log, .json, and pcap artifacts</p>
+                        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                            <h3 style="color: var(--text-high); margin-bottom: 10px;">Ingest Artifacts</h3>
+                            <p style="color: var(--text-low); font-size: 0.85rem;">Drop logs, PCAPs or JSON payloads</p>
                             <input type="file" id="file-input" multiple style="display:none;">
-                            <div id="selected-files" style="margin-top: 15px; font-size: 0.8rem; color: var(--accent-cyan);"></div>
-                        </div>
-                        <div style="margin-top: 20px;">
-                            <textarea id="log-input" style="width:100%; height: 120px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); color: white; padding: 15px; border-radius: 8px; font-family: 'Fira Code', monospace;" placeholder="Paste raw telemetry data..."></textarea>
+                            <div id="selected-files" style="margin-top: 15px; font-size: 0.8rem; color: var(--accent-gold);"></div>
                         </div>
                     </div>
                     <div>
-                        <div class="stat-card" style="margin-bottom: 20px;">
-                            <h3 style="font-size: 0.9rem; margin-bottom: 15px;">Synthetic Intelligence Gallery</h3>
-                            <div id="sample-gallery" style="display: flex; flex-direction: column; gap: 8px;">
-                                <!-- Samples injected here -->
-                                <div class="text-secondary" style="font-size: 0.75rem;">Loading samples...</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <label style="display:block; margin-bottom: 10px; font-size: 0.7rem; text-transform: uppercase;">Mission Model</label>
-                            <select id="model-select" style="width:100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border-color); color: white; border-radius: 6px; margin-bottom: 20px;"></select>
-                            <button class="btn btn-primary" id="run-analysis-btn" style="width:100%;" onclick="App.startAnalysis()">
-                                🚀 Initiate Triage
-                            </button>
-                        </div>
+                        <h3 style="margin-bottom: 15px; font-size: 1rem;">Manual Signal Entry</h3>
+                        <textarea id="log-input" style="width:100%; height: 160px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-dim); color: white; padding: 15px; border-radius: 12px; font-family: 'Fira Code', monospace; resize: none;" placeholder="Paste raw telemetry data..."></textarea>
                     </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px; padding-top: 30px; border-top: 1px solid var(--border-dim);">
+                    <div style="display:flex; gap: 20px; align-items: center;">
+                        <label style="font-size: 0.8rem; color: var(--text-mid);">Target Model:</label>
+                        <select id="model-select" style="padding: 10px 20px; background: var(--bg-darker); border: 1px solid var(--border-dim); color: white; border-radius: 8px;"></select>
+                    </div>
+                    <button class="btn btn-primary" id="run-analysis-btn" onclick="App.startAnalysis()">
+                        🚀 Initiate Mission
+                    </button>
                 </div>
             </div>
 
-            <!-- XAI Trace Console -->
-            <div id="analysis-progress-container" style="display:none; margin-top: 20px;">
-                <div class="panel" style="background: #000; border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(0, 245, 255, 0.1);">
+            <!-- Agent Trace Terminal -->
+            <div id="analysis-progress-container" style="display:none; margin-top: 30px;">
+                <div class="panel" style="border-color: var(--accent-gold);">
                     <div style="display:flex; justify-content:space-between; margin-bottom: 15px;">
-                        <h2 style="font-size: 1rem;">🕵️ Agent Collaboration Console</h2>
-                        <span class="loading-pulse" style="color: var(--accent-cyan); font-size: 0.75rem;">LIVE TRACE ACTIVE</span>
+                        <h2 style="font-size: 1.1rem; color: var(--accent-gold);">🕵️ Agent Collaboration Trace</h2>
+                        <span style="color: var(--status-green); font-size: 0.75rem; letter-spacing: 1px;">STATUS: ACTIVE PROCESSING</span>
                     </div>
-                    <div id="xai-trace" style="height: 250px; overflow-y: auto; font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #88ff88; line-height: 1.6;">
-                        > [NovaManager] Deployment initiated...<br>
-                        > [ParserAgent] Normalizing telemetry streams...
+                    <div id="xai-trace">
+                        > Initializing mission handshake...<br>
+                        > Delegating log parsing to ParserAgent...
                     </div>
                 </div>
             </div>
 
-            <!-- HITL Review Zone -->
-            <div id="review-zone" style="display:none; margin-top: 40px; animation: fadeIn 0.5s ease;">
-                <h1 style="margin-bottom: 20px;">Analyst Validation Checkpoint</h1>
-                <div class="grid-dashboard" style="grid-template-columns: 2fr 1fr;">
-                    <div class="panel report-view" id="intermediate-results" style="max-height: 500px; overflow-y: auto;">
-                        <!-- Intermediate results injected here -->
+            <!-- Analyst Review Hub -->
+            <div id="review-zone" style="display:none; margin-top: 40px;">
+                <h1 style="margin-bottom: 25px;">Triage Validation</h1>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+                    <div class="panel report-view" id="intermediate-results" style="max-height: 600px; overflow-y: auto;">
+                        <!-- Results injected here -->
                     </div>
-                    <div class="stat-card">
-                        <h3>HITL Feedback</h3>
-                        <p class="text-secondary" style="font-size: 0.8rem; margin: 10px 0;">Correct findings or add mitigation context before mission completion.</p>
-                        <textarea id="analyst-feedback" style="width:100%; height: 100px; background: var(--bg-dark); border: 1px solid var(--border-color); color: white; border-radius: 6px; padding: 10px; margin-bottom: 20px;" placeholder="Add intelligence context..."></textarea>
+                    <div class="panel">
+                        <h3 style="margin-bottom: 15px;">Analyst Context</h3>
+                        <p style="color: var(--text-mid); font-size: 0.85rem; margin-bottom: 15px;">Refine findings or add mitigation instructions.</p>
+                        <textarea id="analyst-feedback" style="width:100%; height: 150px; background: var(--bg-darker); border: 1px solid var(--border-dim); color: white; border-radius: 8px; padding: 15px; margin-bottom: 20px;" placeholder="Add intelligence context..."></textarea>
                         <button class="btn btn-primary" style="width:100%;" onclick="App.confirmAnalysis()">
-                            ✅ Confirm & Synthesize
+                            ✅ Finalize Report
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Final Result View -->
+            <!-- Final Narrative -->
             <div id="analysis-results-container" style="display:none; margin-top: 40px;">
                 <div class="panel report-view" id="report-content"></div>
-                <div style="margin-top: 24px; display: flex; gap: 16px;">
-                    <button class="btn btn-primary" onclick="window.print()">📥 Export Narrative</button>
-                    <button class="btn" style="border: 1px solid var(--border-color);" onclick="App.markConfirmed(true)">🎯 Confirm Insight</button>
-                    <button class="btn" style="border: 1px solid var(--border-color); color: var(--accent-red);" onclick="App.markConfirmed(false)">🚩 False Positive</button>
+            </div>
+        </section>
+
+        <!-- Vision Intelligence Section -->
+        <section id="page-vision" class="page-section" style="display:none;">
+            <header style="margin-bottom: 40px;">
+                <h1>Vision Intelligence</h1>
+                <p style="color: var(--text-mid);">Multi-modal analysis of UI artifacts and dashboard snapshots.</p>
+            </header>
+
+            <div class="grid-dashboard" style="grid-template-columns: 1fr 1fr;">
+                <div class="panel">
+                    <h2 style="margin-bottom: 20px; font-size: 1.1rem;">Artifact Ingestion</h2>
+                    <div class="drop-zone" id="vision-drop" onclick="document.getElementById('vision-input').click()">
+                        <p>Upload Snapshot (.png, .jpg)</p>
+                        <input type="file" id="vision-input" style="display:none;" onchange="App.handleVisionUpload(this)">
+                    </div>
+                    <div id="vision-preview" style="margin-top: 20px; text-align: center;"></div>
+                </div>
+                <div class="panel">
+                    <h2 style="margin-bottom: 20px; font-size: 1.1rem;">Vision Analytics</h2>
+                    <div id="vision-results" style="font-size: 0.9rem; line-height: 1.6; color: var(--text-mid);">
+                        Waiting for artifact upload...
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Results View Section -->
-        <section id="page-results" class="page-section" style="display:none;">
-            <header style="margin-bottom: 40px;">
-                <h1>Mission Synthesis</h1>
-                <p class="text-secondary">Detailed breakdown of the most recent analysis report.</p>
-            </header>
-            <div class="panel report-view" id="report-view-content" style="background: var(--bg-panel); padding: 40px; border-radius: 12px; border: 1px solid var(--border-color);">
-                Please execute an analysis first to view results.
-            </div>
-        </section>
-
-        <!-- History Section -->
-        <section id="page-history" class="page-section" style="display:none;">
-            <header style="margin-bottom: 40px;">
-                <h1>Mission Registry</h1>
-                <p class="text-secondary">Historical archive of all sentinel triage operations.</p>
-            </header>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Timestamp</th>
-                        <th>Model</th>
-                        <th>Summary</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="history-table-body">
-                    <!-- History injected here -->
-                </tbody>
-            </table>
-        </section>
-
-        <!-- Active Defense Section -->
+        <!-- Response Center Section -->
         <section id="page-defense" class="page-section" style="display:none;">
             <header style="margin-bottom: 40px;">
                 <h1>Response Center</h1>
-                <p class="text-secondary">Simulate and execute autonomous containment actions.</p>
+                <p style="color: var(--text-mid);">Semi-autonomous containment hub and active rule registry.</p>
             </header>
 
-            <div class="grid-dashboard" style="grid-template-columns: 1fr 2fr;">
+            <div style="display: grid; grid-template-columns: 1.8fr 1fr; gap: 30px;">
                 <div class="panel">
-                    <h2>Live Audit Log</h2>
-                    <div id="audit-log-container" style="margin-top:20px; font-size: 0.8rem; max-height: 400px; overflow-y: auto;">
-                        <p class="text-secondary">Listening for recommendations...</p>
+                    <h2 style="margin-bottom: 20px; font-size: 1.2rem;">Pending Containment Rules</h2>
+                    <div id="actions-container">
+                        <div style="padding: 60px; text-align: center; border: 1px dashed var(--border-dim); border-radius: 12px; opacity: 0.5;">
+                            No active recommendations.
+                        </div>
                     </div>
                 </div>
                 <div class="panel">
-                    <h2>Recommended Actions</h2>
-                    <div id="actions-container" style="margin-top:20px;">
-                        <div style="padding: 40px; text-align: center; border: 1px dashed var(--border-color); border-radius: 8px;">
-                            <p class="text-secondary">No active recommendations. Initiate a triage mission first.</p>
-                        </div>
+                    <h2 style="margin-bottom: 20px; font-size: 1.2rem;">Audit Trail</h2>
+                    <div id="audit-log-container" style="font-size: 0.8rem; max-height: 500px; overflow-y: auto;">
+                        <div class="nav-item" style="cursor:default; border:none; opacity:0.5;">No history recorded.</div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Settings Section -->
+        <!-- History/Settings same structure, refined in app.js -->
+        <section id="page-history" class="page-section" style="display:none;">
+            <header style="margin-bottom: 40px;"><h1>Mission Registry</h1></header>
+            <div class="panel">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Timestamp</th><th>Model</th><th>Insight</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="history-table-body"></tbody>
+                </table>
+            </div>
+        </section>
+
         <section id="page-settings" class="page-section" style="display:none;">
-            <header style="margin-bottom: 40px;">
-                <h1>Control Panel</h1>
-                <p class="text-secondary">Global system configuration and health status.</p>
-            </header>
-            
+            <header style="margin-bottom: 40px;"><h1>System Configuration</h1></header>
             <div class="grid-dashboard">
-                <div class="stat-card">
-                    <h3>System Health</h3>
-                    <div style="margin-top: 20px;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-                            <span>Ollama Node</span>
-                            <span id="ollama-status" style="color: var(--accent-green);">ONLINE</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-                            <span>RAG Knowledge</span>
-                            <span id="rag-status" style="color: var(--accent-green);">SYNCED</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between;">
-                            <span>DDoS Shield</span>
-                            <span style="color: var(--accent-cyan);">ACTIVE</span>
-                        </div>
+                <div class="panel">
+                    <h3>Health Status</h3>
+                    <div style="margin-top:20px; display:flex; flex-direction:column; gap:15px;">
+                        <div style="display:flex; justify-content:space-between;"><span>Ollama Backbone</span><span style="color:var(--status-green);">ONLINE</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span>RAG VectorStore</span><span style="color:var(--status-green);">SYNCED</span></div>
                     </div>
                 </div>
-
-                <div class="stat-card">
-                    <h3>Model Defaults</h3>
-                    <div style="margin-top: 20px;">
-                        <label style="display:block; margin-bottom:8px; font-size:0.75rem;">Global Preference</label>
-                        <select id="settings-model" style="width:100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border-color); color: white; border-radius: 6px;">
-                            <option>llama3.2</option>
-                        </select>
+                <div class="panel">
+                    <h3>Neural Defaults</h3>
+                    <div style="margin-top:20px;">
+                        <button class="btn" style="width:100%;" onclick="App.initRAG()">Refresh Knowledge Base</button>
                     </div>
                 </div>
             </div>
-
-            <button class="btn btn-primary" onclick="App.initRAG()" style="margin-top: 20px;">
-                ⚙️ Refresh RAG Knowledge Base
-            </button>
         </section>
 
     </main>

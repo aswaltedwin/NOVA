@@ -37,7 +37,7 @@ class NovaTasks:
                 - Risk Breakdown
                 - Responder Recommendations (if high risk)
             """),
-            expected_output="Final Markdown report for Phase 2 triage.",
+            expected_output="Final Markdown report for Phase 3.1 triage.",
             agent=agent
         )
 
