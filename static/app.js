@@ -137,17 +137,32 @@ const App = {
             this.dom.statTotal.innerText = data.stats.total_sessions;
             this.dom.statRisk.innerText = data.stats.avg_risk + '%';
             this.dom.statOllama.innerText = data.ollama_status.toUpperCase();
-            this.initChart();
+            
+            // Re-init chart with real data
+            await this.initChart();
         } catch (e) {
             console.error("Stats failure", e);
         }
     },
 
-    initChart() {
+    async initChart() {
         const canvas = document.getElementById('riskTrendChart');
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         if (this.state.chart) this.state.chart.destroy();
+
+        // Fetch real trend data
+        let labels = ['-6h', '-5h', '-4h', '-3h', '-2h', '-1h', 'Now'];
+        let data = [12, 25, 20, 52, 38, 70, 74]; // Defaults if no history
+        
+        try {
+            const res = await this.secureFetch('/api/stats/trend');
+            const trend = await res.json();
+            if (trend.length > 0) {
+                labels = trend.map(t => t.date);
+                data = trend.map(t => t.risk);
+            }
+        } catch (e) { console.warn("Using default chart data", e); }
 
         const gradient = ctx.createLinearGradient(0, 0, 0, 300);
         gradient.addColorStop(0, 'rgba(212, 175, 55, 0.4)');
@@ -156,10 +171,10 @@ const App = {
         this.state.chart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['-6h', '-5h', '-4h', '-3h', '-2h', '-1h', 'Now'],
+                labels: labels,
                 datasets: [{
                     label: 'Risk Score',
-                    data: [12, 25, 20, 52, 38, 70, 74],
+                    data: data,
                     borderColor: '#D4AF37',
                     borderWidth: 3,
                     pointBackgroundColor: '#D4AF37',
@@ -168,6 +183,7 @@ const App = {
                     tension: 0.4
                 }]
             },
+
             options: {
                 responsive: true,
                 maintainAspectRatio: false,

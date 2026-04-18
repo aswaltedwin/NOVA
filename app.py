@@ -4,6 +4,7 @@ import os
 import json
 import uuid
 import datetime
+import re # New: For parsing risk scores
 from typing import List, Optional, Dict, Any
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from sqlalchemy import desc # New: For ordering trends
 
 from nova_engine import run_nova_analysis_stage, run_nova_report_stage
 from utils import load_sample_logs, initialize_rag, save_report
@@ -181,11 +183,20 @@ async def run_background_analysis(job_id: str, log_input: str, model_name: str):
         
         result = await asyncio.to_thread(run_nova_analysis_stage, log_input, model_name)
         
+        # Extract Risk Score if present in result
+        risk_match = re.search(r"Risk Score:\s*(\d+)", str(result))
+        extracted_risk = int(risk_match.group(1)) if risk_match else 0
+        
         job.status = "review" 
         job.progress = 50
         job.intermediate_results = str(result)
+        job.risk_score = extracted_risk # New: Persistence
         db.commit()
-        await manager.broadcast({"job_id": job_id, "status": "review", "progress": 50, "intermediate": str(result)})
+        await manager.broadcast({
+            "job_id": job_id, "status": "review", "progress": 50, 
+            "intermediate": str(result), "risk_score": extracted_risk
+        })
+
     except Exception as e:
         logger.exception(f"Job {job_id} analysis failed.")
         job = db.query(Job).filter(Job.id == job_id).first()
@@ -248,7 +259,7 @@ async def run_background_reporting(job_id: str, synthesis_input: str, model_name
     finally:
         db.close()
 
-@app.post("/api/action/execute")
+@app.get("/api/action/execute")
 async def execute_action(action: ActionRequest, db: Session = Depends(get_db)):
     # Log to Audit Log
     new_audit = AuditLog(action=f"Execute_Action_{action.action_id}", details=json.dumps(action.context))
@@ -257,9 +268,21 @@ async def execute_action(action: ActionRequest, db: Session = Depends(get_db)):
     
     return {"status": "success", "message": f"Action {action.action_id} logged and executed."}
 
+@app.get("/api/stats/trend")
+async def get_risk_trend(db: Session = Depends(get_db)):
+    """Returns risk trends for the last 7 missions."""
+    jobs = db.query(Job).filter(Job.status == "completed").order_by(desc(Job.created_at)).limit(7).all()
+    # Reverse to show chronological order
+    trend_data = [{"id": j.id, "risk": j.risk_score, "date": j.created_at.strftime("%H:%M")} for j in reversed(jobs)]
+    return trend_data
+
 @app.get("/api/settings")
 async def get_settings(db: Session = Depends(get_db)):
     total_sessions = db.query(Job).count()
+    # Calculate real average risk from DB
+    avg_risk_query = db.query(Job).filter(Job.risk_score > 0).all()
+    avg_risk = sum(j.risk_score for j in avg_risk_query) // len(avg_risk_query) if avg_risk_query else 0
+        
     return {
         "current_model": Config.MODEL_NAME.replace("ollama/", ""),
         "available_models": Config.AVAILABLE_MODELS,
@@ -267,10 +290,11 @@ async def get_settings(db: Session = Depends(get_db)):
         "rag_status": "synced",
         "stats": {
             "total_sessions": total_sessions,
-            "avg_risk": 74 if total_sessions > 0 else 0,
+            "avg_risk": avg_risk,
             "mitre_count": 102
         }
     }
+
 
 if __name__ == "__main__":
     import uvicorn

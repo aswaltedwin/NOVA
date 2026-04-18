@@ -12,7 +12,9 @@ class Job(Base):
     id = Column(String, primary_key=True)
     status = Column(String, default='pending')
     progress = Column(Integer, default=0)
+    risk_score = Column(Integer, default=0) # New: Numerical risk score
     model = Column(String)
+
     log_input = Column(Text)
     intermediate_results = Column(Text, nullable=True)
     result = Column(Text, nullable=True)
