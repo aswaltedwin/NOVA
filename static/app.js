@@ -2,19 +2,19 @@ const App = {
     state: {
         currentPage: 'dashboard',
         activeJobId: null,
-        isPolling: false,
+        websocket: null,
         history: [],
         audit: [],
-        chart: null
+        chart: null,
+        apiKey: 'NOVA-SENTINEL-SECURE-KEY-2026' // Default for now
     },
 
     init() {
         this.cacheDOM();
         this.bindEvents();
+        this.initWebSocket();
         this.route('dashboard');
         this.loadSettings();
-        
-        // Initial data pull
         this.refreshStats();
     },
 
@@ -71,6 +71,43 @@ const App = {
         }
     },
 
+    initWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        this.state.websocket = new WebSocket(`${protocol}//${window.location.host}/ws/jobs`);
+        
+        this.state.websocket.onmsg = (event) => {
+            const data = JSON.parse(event.data);
+            this.handleJobUpdate(data);
+        };
+
+        this.state.websocket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            this.handleJobUpdate(data);
+        };
+
+        this.state.websocket.onclose = () => {
+            console.warn("WebSocket closed. Reconnecting...");
+            setTimeout(() => this.initWebSocket(), 3000);
+        };
+    },
+
+    handleJobUpdate(data) {
+        if (data.job_id !== this.state.activeJobId) return;
+
+        if (data.status === 'analyzing') {
+            this.addTrace("AnalyzerAgent", `Deep scanning telemetry... Coverage [${data.progress}%]`);
+        } else if (data.status === 'review') {
+            this.addTrace("NovaManager", "Analysis complete. Awaiting human validation.");
+            this.renderReview(data.intermediate);
+        } else if (data.status === 'completed') {
+            this.addTrace("ReporterAgent", "Mission report finalized.");
+            this.renderFinal(data.result);
+        } else if (data.status === 'failed') {
+            this.addTrace("SYSTEM", `CRITICAL FAILURE: ${data.error}`);
+            this.dom.runBtn.disabled = false;
+        }
+    },
+
     route(page) {
         this.state.currentPage = page;
         this.dom.navItems.forEach(item => {
@@ -80,22 +117,29 @@ const App = {
             sec.style.display = sec.id === `page-${page}` ? 'block' : 'none';
         });
 
-        // Specific page load logic
         if (page === 'dashboard') this.refreshStats();
         if (page === 'defense') this.loadDefenseData();
         if (page === 'history') this.loadHistory();
     },
 
+    async secureFetch(url, options = {}) {
+        options.headers = {
+            ...options.headers,
+            'X-API-KEY': this.state.apiKey
+        };
+        return fetch(url, options);
+    },
+
     async refreshStats() {
         try {
-            const res = await fetch('/api/settings');
+            const res = await this.secureFetch('/api/settings');
             const data = await res.json();
             this.dom.statTotal.innerText = data.stats.total_sessions;
             this.dom.statRisk.innerText = data.stats.avg_risk + '%';
             this.dom.statOllama.innerText = data.ollama_status.toUpperCase();
             this.initChart();
         } catch (e) {
-            console.error("Failed to load stats", e);
+            console.error("Stats failure", e);
         }
     },
 
@@ -105,10 +149,9 @@ const App = {
         const ctx = canvas.getContext('2d');
         if (this.state.chart) this.state.chart.destroy();
 
-        // Premium Gradient
         const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-        gradient.addColorStop(0, 'rgba(212, 175, 55, 0.3)');
-        gradient.addColorStop(1, 'rgba(212, 175, 55, 0)');
+        gradient.addColorStop(0, 'rgba(212, 175, 55, 0.4)');
+        gradient.addColorStop(1, 'rgba(10, 11, 16, 0)');
 
         this.state.chart = new Chart(ctx, {
             type: 'line',
@@ -116,10 +159,10 @@ const App = {
                 labels: ['-6h', '-5h', '-4h', '-3h', '-2h', '-1h', 'Now'],
                 datasets: [{
                     label: 'Risk Score',
-                    data: [15, 22, 18, 45, 30, 65, 74],
-                    borderColor: '#d4af37',
+                    data: [12, 25, 20, 52, 38, 70, 74],
+                    borderColor: '#D4AF37',
                     borderWidth: 3,
-                    pointBackgroundColor: '#d4af37',
+                    pointBackgroundColor: '#D4AF37',
                     backgroundColor: gradient,
                     fill: true,
                     tension: 0.4
@@ -130,8 +173,8 @@ const App = {
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { grid: { display : false }, ticks: { color: '#6e6e73' } },
-                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6e6e73' }, min: 0, max: 100 }
+                    x: { grid: { display : false }, ticks: { color: '#65676B' } },
+                    y: { grid: { color: 'rgba(212, 175, 55, 0.1)' }, ticks: { color: '#65676B' }, min: 0, max: 100 }
                 }
             }
         });
@@ -146,11 +189,6 @@ const App = {
         const log = this.dom.logInput.value;
         const model = this.dom.modelSelect.value;
         
-        if (!log && !this.state.selectedFiles) {
-            this.addTrace("SYSTEM", "Warning: No signals provided for triage.");
-            return;
-        }
-
         const fd = new FormData();
         fd.append('log_text', log);
         fd.append('model_name', model);
@@ -160,46 +198,16 @@ const App = {
 
         this.dom.progressZone.style.display = 'block';
         this.dom.runBtn.disabled = true;
-        this.addTrace("NovaManager", "Handshake confirmed. Deploying Parser and Analyzer agents...");
+        this.addTrace("NovaManager", "Initiating secure mission handshake. Deploying agents...");
 
         try {
-            const res = await fetch('/api/analyze', { method: 'POST', body: fd });
+            const res = await this.secureFetch('/api/analyze', { method: 'POST', body: fd });
             const job = await res.json();
             this.state.activeJobId = job.id;
-            this.pollJob(job.id);
         } catch (e) {
-            this.addTrace("SYSTEM", "Mission deployment failed: " + e.message);
+            this.addTrace("SYSTEM", `Deployment error: ${e.message}`);
             this.dom.runBtn.disabled = false;
         }
-    },
-
-    async pollJob(jobId) {
-        this.state.isPolling = true;
-        const poll = async () => {
-            if (!this.state.isPolling) return;
-            const res = await fetch(`/api/job/${jobId}`);
-            const job = await res.json();
-
-            if (job.status === 'analyzing') {
-                this.addTrace("AnalyzerAgent", "Cross-referencing RAG knowledge base for technique mapping...");
-            } else if (job.status === 'review') {
-                this.state.isPolling = false;
-                this.addTrace("NovaManager", "Analysis phase complete. Proceeding to Analyst Validation Hub.");
-                this.renderReview(job.intermediate_results);
-                return;
-            } else if (job.status === 'completed') {
-                this.state.isPolling = false;
-                this.renderFinal(job.result);
-                return;
-            } else if (job.status === 'failed') {
-                this.state.isPolling = false;
-                this.addTrace("SYSTEM", "Job Error: " + job.error);
-                return;
-            }
-
-            setTimeout(poll, 2000);
-        };
-        poll();
     },
 
     renderReview(markdown) {
@@ -210,20 +218,18 @@ const App = {
 
     async confirmAnalysis() {
         const feedback = this.dom.analystFeedback.value;
-        this.addTrace("NovaManager", "Analyst feedback integrated. Initiating final synthesis...");
+        this.addTrace("NovaManager", "Feedback integrated. Commencing final synthesis.");
         
         const fd = new FormData();
         fd.append('feedback', feedback);
 
         try {
-            const res = await fetch(`/api/job/${this.state.activeJobId}/confirm`, { 
+            await this.secureFetch(`/api/job/${this.state.activeJobId}/confirm`, { 
                 method: 'POST', 
                 body: fd
             });
-            const job = await res.json();
-            this.pollJob(job.id);
         } catch (e) {
-            this.addTrace("SYSTEM", "Synthesis step failed: " + e.message);
+            this.addTrace("SYSTEM", `Synthesis failed: ${e.message}`);
         }
     },
 
@@ -231,99 +237,75 @@ const App = {
         this.dom.reportZone.style.display = 'block';
         this.dom.finalReport.innerHTML = marked.parse(markdown || '');
         this.dom.reportZone.scrollIntoView({ behavior: 'smooth' });
-        this.addTrace("SYSTEM", "Mission Triage Successfully Concluded.");
+        this.addTrace("SYSTEM", "Mission Triage Finalized.");
         this.dom.runBtn.disabled = false;
     },
 
     addTrace(agent, msg) {
         const div = document.createElement('div');
-        div.style.marginBottom = '8px';
+        div.style.marginBottom = '10px';
+        div.style.paddingLeft = '5px';
         div.innerHTML = `<span style="color:var(--text-low)">[${new Date().toLocaleTimeString()}]</span> <span style="color:var(--accent-gold); font-weight:600;">[${agent}]</span> ${msg}`;
         this.dom.traceConsole.appendChild(div);
         this.dom.traceConsole.scrollTop = this.dom.traceConsole.scrollHeight;
     },
 
-    // Vision Pipeline
     async handleVisionUpload(input) {
         const file = input.files[0];
         if (!file) return;
 
-        // Preview
         const reader = new FileReader();
         reader.onload = (e) => {
-            this.dom.visionPreview.innerHTML = `<img src="${e.target.result}" style="max-width:100%; border-radius:12px; border:1px solid var(--border-gold);">`;
+            this.dom.visionPreview.innerHTML = `<img src="${e.target.result}" style="max-width:100%; border-radius:16px; border:1px solid var(--border-gold); box-shadow: var(--shadow-premium);">`;
         };
         reader.readAsDataURL(file);
 
-        this.dom.visionResults.innerText = "Processing via Llama-Vision engine...";
+        this.dom.visionResults.innerText = "Analyzing artifact via Llama-Vision...";
         
         const fd = new FormData();
         fd.append('file', file);
 
         try {
-            const res = await fetch('/api/vision/analyze', { method: 'POST', body: fd });
+            const res = await this.secureFetch('/api/vision/analyze', { method: 'POST', body: fd });
             const data = await res.json();
-            this.dom.visionResults.innerHTML = marked.parse(data.result || 'No response from vision engine.');
+            this.dom.visionResults.innerHTML = marked.parse(data.result || 'No signals detected.');
         } catch (e) {
             this.dom.visionResults.innerText = "Vision analysis failed: " + e.message;
         }
     },
 
-    // Defense Center
     async loadDefenseData() {
         try {
-            const auditRes = await fetch('/api/history/audit');
+            const auditRes = await this.secureFetch('/api/history/audit');
             const auditData = await auditRes.json();
             
             this.dom.auditLog.innerHTML = auditData.reverse().map(l => `
-                <div style="margin-bottom:15px; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border-left: 3px solid var(--accent-gold);">
+                <div style="margin-bottom:15px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border-left: 3px solid var(--accent-gold);">
                     <div style="font-size: 0.7rem; color: var(--text-low);">${new Date(l.timestamp).toLocaleString()}</div>
-                    <div style="font-weight: 600; color: var(--accent-gold); margin: 5px 0;">${l.tool}</div>
-                    <div style="font-size: 0.85rem;">Action: ${l.action}</div>
-                    <div style="font-size: 0.8rem; color: var(--text-mid);">Target: ${l.target}</div>
-                    <div style="margin-top:8px; font-family:'Fira Code'; font-size:0.75rem; color:var(--status-green);">${l.remediation_script || ''}</div>
+                    <div style="font-weight: 600; color: var(--accent-gold); margin: 5px 0;">${l.action}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-mid);">${l.details}</div>
                 </div>
-            `).join('') || '<div style="opacity:0.5; text-align:center; padding:20px;">No audit trail available.</div>';
-
-            // Recommended Actions (Simulated)
-            const actions = auditData.filter(a => a.state === 'SIMULATED');
-            this.dom.actionsContainer.innerHTML = actions.map(a => `
-                <div class="panel" style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <div style="font-weight:600; color:var(--accent-gold);">${a.action}</div>
-                        <div style="font-size:0.8rem; color:var(--text-mid);">${a.target}</div>
-                    </div>
-                    <button class="btn btn-primary" onclick="App.executeAction('${a.timestamp}')">Execute</button>
-                </div>
-            `).join('') || '<div style="opacity:0.5; text-align:center; padding:20px;">No pending actions.</div>';
-
+            `).join('') || '<div style="opacity:0.5; text-align:center; padding:20px;">Secure audit log empty.</div>';
         } catch (e) { console.error(e); }
     },
 
-    async executeAction(timestamp) {
-        alert("Action queued for kernel-level execution simulation.");
-    },
-
     async loadHistory() {
-        const res = await fetch('/api/history');
+        const res = await this.secureFetch('/api/history');
         const data = await res.json();
+        // Backend simplified history to Job records
+        // Map Job table to the display
         this.dom.historyTable.innerHTML = data.map(h => `
             <tr>
-                <td style="font-size:0.8rem;">${new Date(h.timestamp).toLocaleString()}</td>
-                <td><span style="color:var(--accent-gold); font-size:0.8rem;">${h.model}</span></td>
-                <td style="color:var(--text-mid); font-size: 0.8rem;">${h.summary}</td>
-                <td><button class="btn" style="padding:4px 10px; font-size:0.7rem;" onclick="App.viewHistoricalReport('${h.id}')">View</button></td>
+                <td>${new Date(h.timestamp || Date.now()).toLocaleString()}</td>
+                <td><span style="color:var(--accent-gold);">${h.model}</span></td>
+                <td>${h.summary || 'Legacy Record'}</td>
+                <td><button class="btn" onclick="App.viewHistoricalReport('${h.id}')">View</button></td>
             </tr>
-        `).join('') || '<tr><td colspan="4" style="text-align:center; opacity:0.5;">Empty mission archive.</td></tr>';
-    },
-
-    async initRAG() {
-        const res = await fetch('/api/memory/learn?document=INITIALIZE'); // Simple trigger
-        alert("Neural Knowledge Base Synchronized.");
+        `).join('');
     },
 
     loadSettings() {
-        fetch('/api/settings').then(r => r.json()).then(data => {
+        this.secureFetch('/api/settings').then(r => r.json()).then(data => {
             this.dom.modelSelect.innerHTML = data.available_models.map(m => `
                 <option value="${m}" ${m === data.current_model ? 'selected' : ''}>${m}</option>
             `).join('');

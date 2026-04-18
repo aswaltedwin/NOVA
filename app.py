@@ -1,106 +1,156 @@
 import asyncio
 import logging
-from fastapi import FastAPI, Request, HTTPException, UploadFile, File, Form
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
 import os
 import json
 import uuid
 import datetime
 from typing import List, Optional, Dict, Any
+from pathlib import Path
+
+from fastapi import FastAPI, Request, HTTPException, UploadFile, File, Form, WebSocket, WebSocketDisconnect, Depends
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from nova_engine import run_nova_analysis_stage, run_nova_report_stage
 from utils import load_sample_logs, initialize_rag, save_report
-from config import Config
+from config import Config, logger
 from rag_tool import RAGSearchTool
+from models import init_db, SessionLocal, Job, AuditLog
 
 import webbrowser
 from threading import Timer
 
-logger = logging.getLogger("NOVA-Sentinel")
+# Initialize Database
+init_db()
 
 app = FastAPI(
     title="NOVA Sentinel Command Center",
     description="Professional-grade autonomous cybersecurity defense platform.",
-    version="3.1.0"
+    version=Config.VERSION
 )
 
-# Pydantic Models for Type Safety
-class AnalysisJob(BaseModel):
+# CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# API Key Middleware (Simple)
+async def verify_api_key(request: Request):
+    api_key = request.headers.get("X-API-KEY")
+    if api_key != Config.API_KEY:
+        raise HTTPException(status_code=403, detail="Invalid Security Token")
+    return api_key
+
+# Database Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# WebSocket Manager for Real-time Status
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: dict):
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message)
+            except Exception:
+                pass
+
+manager = ConnectionManager()
+
+# Pydantic Models
+class AnalysisJobSchema(BaseModel):
     id: str
     status: str
     progress: int
     model: str
-    log_input: Optional[str] = None
-    intermediate_results: Optional[Any] = None
     result: Optional[str] = None
     error: Optional[str] = None
+
+    class Config:
+        orm_mode = True
 
 class ActionRequest(BaseModel):
     action_id: int
     context: Optional[Dict[str, Any]] = None
 
-HISTORY_FILE = "nova_history.json"
-
 @app.on_event("startup")
 async def startup_event():
-    """Zero-Touch Onboarding: Auto-seeds RAG if empty."""
-    logger.info("🚀 NOVA Sentinel starting up...")
+    logger.info(f"🚀 NOVA Sentinel {Config.VERSION} starting up...")
     
-    # Check if RAG is already initialized
-    knowledge_path = Config.CHROMA_PERSIST_DIR
-    if not os.path.exists(knowledge_path) or not os.listdir(knowledge_path):
+    # Check RAG
+    if not os.path.exists(Config.CHROMA_PERSIST_DIR) or not os.listdir(Config.CHROMA_PERSIST_DIR):
         logger.info("💡 First run detected. Auto-seeding MITRE ATT&CK knowledge base...")
         initialize_rag()
     
-    # Auto-open browser after a short delay
     Timer(1.5, lambda: webbrowser.open("http://localhost:8000")).start()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# In-memory Job Tracker (Could be replaced with Redis for production)
-jobs: Dict[str, Dict[str, Any]] = {}
-
 @app.get("/", response_class=HTMLResponse)
 async def get_index():
-    if os.path.exists("index.html"):
-        with open("index.html", "r", encoding="utf-8") as f: return f.read()
+    index_path = Path("index.html")
+    if index_path.exists():
+        return HTMLResponse(content=index_path.read_text(encoding="utf-8"))
     return "Index Missing"
 
 @app.get("/api/logs")
 async def get_logs():
-    """Returns a list of high-fidelity synthetic logs for triage testing."""
-    log_dir = "data/synthetic_logs"
-    if not os.path.exists(log_dir): return []
-    files = os.listdir(log_dir)
+    log_dir = Path("data/synthetic_logs")
+    if not log_dir.exists(): return []
     return [
-        {"id": i, "filename": f, "path": os.path.join(log_dir, f)}
-        for i, f in enumerate(files)
+        {"id": i, "filename": f.name, "path": str(f)}
+        for i, f in enumerate(log_dir.iterdir()) if f.is_file()
     ]
 
 @app.get("/api/read")
 async def read_log(path: str):
-    """Reads and returns the content of a synthetic log file."""
-    if not os.path.exists(path): raise HTTPException(status_code=404)
-    # Security: Ensure path is within data/synthetic_logs
-    if "synthetic_logs" not in os.path.abspath(path): 
-        raise HTTPException(status_code=403, detail="Access denied outside permitted directory.")
+    base_path = Path("data/synthetic_logs").resolve()
+    target_path = Path(path).resolve()
+    
+    if not target_path.exists() or not target_path.is_relative_to(base_path):
+        raise HTTPException(status_code=403, detail="Unauthorized access to paths outside log directory.")
     
     try:
-        with open(path, "r", encoding="utf-8") as f:
-            return {"content": f.read()}
+        return {"content": target_path.read_text(encoding="utf-8")}
     except Exception as e:
-        logger.error(f"Failed to read log file {path}: {e}")
+        logger.error(f"Read failure: {e}")
         raise HTTPException(status_code=500, detail="Internal file error.")
+
+@app.websocket("/ws/jobs")
+async def websocket_jobs(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            await websocket.receive_text() # Keep connection alive
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
 
 @app.post("/api/analyze")
 async def start_analysis(
     log_text: Optional[str] = Form(None),
     model_name: str = Form(Config.MODEL_NAME.replace("ollama/", "")),
-    files: Optional[List[UploadFile]] = File(None)
+    files: Optional[List[UploadFile]] = File(None),
+    db: Session = Depends(get_db)
 ):
-    """Workflow Step 1: Automated Analysis Stage (Async)."""
     combined_log = log_text or ""
     if files:
         for file in files:
@@ -108,159 +158,116 @@ async def start_analysis(
             combined_log += f"\n--- File: {file.filename} ---\n{content.decode('utf-8', errors='ignore')}"
 
     job_id = str(uuid.uuid4())
-    jobs[job_id] = {
-        "id": job_id, "status": "parsing", "progress": 10, "model": model_name,
-        "log_input": combined_log, "intermediate_results": None, "result": None
-    }
+    new_job = Job(
+        id=job_id, status="parsing", progress=10, model=model_name,
+        log_input=combined_log
+    )
+    db.add(new_job)
+    db.commit()
 
-    # Execute long-running analysis in a separate thread to keep FastAPI responsive
     asyncio.create_task(run_background_analysis(job_id, combined_log, model_name))
-    
-    return jobs[job_id]
+    return {"id": job_id, "status": "parsing"}
 
 async def run_background_analysis(job_id: str, log_input: str, model_name: str):
-    """Background task for analysis stage."""
+    db = SessionLocal()
     try:
-        jobs[job_id]["status"] = "analyzing"
-        jobs[job_id]["progress"] = 30
-        logger.info(f"Job {job_id}: Starting Analysis Stage...")
+        job = db.query(Job).filter(Job.id == job_id).first()
+        if not job: return
+
+        job.status = "analyzing"
+        job.progress = 30
+        db.commit()
+        await manager.broadcast({"job_id": job_id, "status": "analyzing", "progress": 30})
         
         result = await asyncio.to_thread(run_nova_analysis_stage, log_input, model_name)
         
-        jobs[job_id]["status"] = "review" 
-        jobs[job_id]["progress"] = 50
-        jobs[job_id]["intermediate_results"] = str(result)
-        logger.info(f"Job {job_id}: Analysis Stage Complete. Waiting for Analyst Review.")
+        job.status = "review" 
+        job.progress = 50
+        job.intermediate_results = str(result)
+        db.commit()
+        await manager.broadcast({"job_id": job_id, "status": "review", "progress": 50, "intermediate": str(result)})
     except Exception as e:
-        logger.exception(f"Job {job_id} failed during analysis stage.")
-        jobs[job_id]["status"] = "failed"
-        jobs[job_id]["error"] = str(e)
+        logger.exception(f"Job {job_id} analysis failed.")
+        job = db.query(Job).filter(Job.id == job_id).first()
+        if job:
+            job.status = "failed"
+            job.error = str(e)
+            db.commit()
+            await manager.broadcast({"job_id": job_id, "status": "failed", "error": str(e)})
+    finally:
+        db.close()
 
 @app.get("/api/job/{job_id}")
-async def get_job_status(job_id: str):
-    """Poll for job status."""
-    if job_id not in jobs: raise HTTPException(status_code=404)
-    return jobs[job_id]
+async def get_job_status(job_id: str, db: Session = Depends(get_db)):
+    job = db.query(Job).filter(Job.id == job_id).first()
+    if not job: raise HTTPException(status_code=404)
+    return {
+        "id": job.id, "status": job.status, "progress": job.progress,
+        "model": job.model, "intermediate": job.intermediate_results,
+        "result": job.result, "error": job.error
+    }
 
 @app.post("/api/job/{job_id}/confirm")
-async def confirm_analysis(job_id: str, feedback: Optional[str] = Form(None)):
-    """Workflow Step 2: Synthesis & Report Stage (After User Review)."""
-    if job_id not in jobs: raise HTTPException(status_code=404)
-    job = jobs[job_id]
+async def confirm_analysis(job_id: str, feedback: Optional[str] = Form(None), db: Session = Depends(get_db)):
+    job = db.query(Job).filter(Job.id == job_id).first()
+    if not job: raise HTTPException(status_code=404)
     
-    job["status"] = "reporting"
-    job["progress"] = 75
+    job.status = "reporting"
+    job.progress = 75
+    db.commit()
     
-    # Combine results with user feedback if provided
-    synthesis_input = job["intermediate_results"]
+    synthesis_input = job.intermediate_results
     if feedback:
         synthesis_input += f"\n\n--- ANALYST FEEDBACK ---\n{feedback}"
     
-    asyncio.create_task(run_background_reporting(job_id, synthesis_input, job["model"]))
-    return job
+    asyncio.create_task(run_background_reporting(job_id, synthesis_input, job.model))
+    return {"id": job_id, "status": "reporting"}
 
 async def run_background_reporting(job_id: str, synthesis_input: str, model_name: str):
-    """Background task for reporting stage."""
+    db = SessionLocal()
     try:
-        logger.info(f"Job {job_id}: Starting Synthesis Stage...")
+        job = db.query(Job).filter(Job.id == job_id).first()
+        if not job: return
+
         final_report = await asyncio.to_thread(run_nova_report_stage, synthesis_input, model_name)
         
-        jobs[job_id]["status"] = "completed"
-        jobs[job_id]["progress"] = 100
-        jobs[job_id]["result"] = str(final_report)
+        job.status = "completed"
+        job.progress = 100
+        job.result = str(final_report)
+        db.commit()
         
-        # Save to history
-        save_to_history(jobs[job_id])
-        logger.info(f"Job {job_id}: Mission Complete.")
+        await manager.broadcast({"job_id": job_id, "status": "completed", "progress": 100, "result": str(final_report)})
     except Exception as e:
-        logger.exception(f"Job {job_id} failed during reporting stage.")
-        jobs[job_id]["status"] = "failed"
-        jobs[job_id]["error"] = str(e)
-
-@app.post("/api/memory/learn")
-async def learn_insight(document: str, id: Optional[str] = None):
-    """Workflow Step 3: Persistence & Learning."""
-    try:
-        rag = RAGSearchTool()
-        new_id = id or f"LEARNED_{uuid.uuid4().hex[:8]}"
-        rag.add_knowledge([document], [new_id], [{"source": "analyst_feedback"}])
-        return {"status": "success", "id": new_id}
-    except Exception as e:
-        logger.error(f"Learning failed: {e}")
-        return {"status": "error", "message": str(e)}
-
-@app.get("/api/history/audit")
-async def get_audit_log():
-    from response_tools import AUDIT_LOG
-    if not os.path.exists(AUDIT_LOG): return []
-    try:
-        with open(AUDIT_LOG, "r") as f: return json.load(f)
-    except Exception: return []
+        logger.exception(f"Job {job_id} reporting failed.")
+        job = db.query(Job).filter(Job.id == job_id).first()
+        if job:
+            job.status = "failed"
+            job.error = str(e)
+            db.commit()
+            await manager.broadcast({"job_id": job_id, "status": "failed", "error": str(e)})
+    finally:
+        db.close()
 
 @app.post("/api/action/execute")
-async def execute_action(action: ActionRequest):
-    """Workflow: Human-in-the-loop Execution."""
-    logger.info(f"Executing defense action ID: {action.action_id}")
-    return {
-        "status": "success", 
-        "message": f"Action {action.action_id} executed successfully.", 
-        "timestamp": datetime.datetime.now().isoformat()
-    }
-
-@app.get("/api/history")
-async def get_history():
-    if not os.path.exists(HISTORY_FILE): return []
-    with open(HISTORY_FILE, "r") as f: return json.load(f)
-
-def save_to_history(job):
-    history = []
-    if os.path.exists(HISTORY_FILE):
-        try:
-            with open(HISTORY_FILE, "r") as f: history = json.load(f)
-        except Exception: history = []
+async def execute_action(action: ActionRequest, db: Session = Depends(get_db)):
+    # Log to Audit Log
+    new_audit = AuditLog(action=f"Execute_Action_{action.action_id}", details=json.dumps(action.context))
+    db.add(new_audit)
+    db.commit()
     
-    history.insert(0, {
-        "id": job["id"],
-        "timestamp": datetime.datetime.now().isoformat(),
-        "model": job["model"],
-        "summary": job["result"][:150] + "..." if job["result"] else "No summary available",
-        "report": job["result"]
-    })
-    with open(HISTORY_FILE, "w") as f: json.dump(history[:50], f, indent=2)
-
-@app.post("/api/vision/analyze")
-async def analyze_vision(file: UploadFile = File(...)):
-    """Workflow Stage: Visual Intelligence."""
-    temp_path = f"static/uploads/{uuid.uuid4().hex}_{file.filename}"
-    os.makedirs("static/uploads", exist_ok=True)
-    
-    with open(temp_path, "wb") as f:
-        f.write(await file.read())
-        
-    try:
-        logger.info(f"Analyzing vision artifact: {file.filename}")
-        from nova_engine import run_nova_vision_stage
-        # Vision is usually fast enough for single image, but could also be async-threaded
-        result = await asyncio.to_thread(run_nova_vision_stage, temp_path)
-        return {"id": uuid.uuid4().hex, "status": "completed", "result": result, "image_path": temp_path}
-    except Exception as e:
-        logger.error(f"Vision analysis failed: {e}")
-        return {"status": "error", "message": str(e)}
+    return {"status": "success", "message": f"Action {action.action_id} logged and executed."}
 
 @app.get("/api/settings")
-async def get_settings():
-    history = await get_history()
-    total_sessions = len(history)
-    avg_risk = 74 if total_sessions > 0 else 0
-        
+async def get_settings(db: Session = Depends(get_db)):
+    total_sessions = db.query(Job).count()
     return {
         "current_model": Config.MODEL_NAME.replace("ollama/", ""),
-        "available_models": ["llama3.2", "qwen2.5:7b", "deepseek-r1:7b", "deepseek-v3.1:671b-cloud"],
+        "available_models": Config.AVAILABLE_MODELS,
         "ollama_status": "online",
         "rag_status": "synced",
         "stats": {
             "total_sessions": total_sessions,
-            "avg_risk": avg_risk,
+            "avg_risk": 74 if total_sessions > 0 else 0,
             "mitre_count": 102
         }
     }
@@ -268,4 +275,5 @@ async def get_settings():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
 

@@ -4,18 +4,33 @@ from tasks import NovaTasks
 from config import Config
 from textwrap import dedent
 import logging
+import hashlib
+import diskcache
 
 logger = logging.getLogger("NOVA-Engine")
+cache = diskcache.Cache(str(Config.BASE_DIR / ".nova_cache"))
+
+def get_cache_key(log_input, model_name):
+    """Generates a unique key for the analysis payload."""
+    payload = f"{model_name}:{log_input}".encode('utf-8')
+    return hashlib.md5(payload).hexdigest()
 
 def run_nova_analysis_stage(log_input, model_name, vision_results=None):
-    """Stage 1: Parse and Analyze the intelligence signals."""
-    agents = NovaAgents(model_name)
-    tasks = NovaTasks()
+    """Stage 1: Parse and Analyze the intelligence signals with caching."""
     
-    # If vision results exist, prepend them to the log input for holistic analysis
+    # Prepend vision if exists
     if vision_results:
         log_input = f"--- VISUAL INTELLIGENCE REPORT ---\n{vision_results}\n\n--- RAW TELEMETRY ---\n{log_input}"
 
+    # Check Cache
+    cache_key = get_cache_key(log_input, model_name)
+    if cache_key in cache:
+        logger.info("Found analysis results in local cache. Retrieving...")
+        return cache[cache_key]
+
+    agents = NovaAgents(model_name)
+    tasks = NovaTasks()
+    
     manager = agents.manager_agent()
     parser_agent = agents.log_parser_agent()
     analyzer_agent = agents.threat_analyzer_agent()
@@ -34,7 +49,12 @@ def run_nova_analysis_stage(log_input, model_name, vision_results=None):
     )
     
     logger.info("Kickoff: NOVA Analysis Stage")
-    return crew.kickoff()
+    result = crew.kickoff()
+    
+    # Store in Cache
+    cache[cache_key] = str(result)
+    return result
+
 
 def run_nova_report_stage(analysis_results, model_name):
     """Stage 2: Synthesize findings into the final report."""
